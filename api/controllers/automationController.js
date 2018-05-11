@@ -5,7 +5,7 @@ const fs = require('fs');
 const exec = require('child_process').execSync;
 
 // HELPERS
-const awsHelpers = require('./helpers/aws-helpers');
+const awsHelpers = require('./helpers/amazon/aws-helpers');
 
 const filepath = process.cwd() + '/temp';
 const shellScriptPath = process.cwd() + '/utils/create_package.sh';
@@ -109,12 +109,10 @@ function createAlexaSkillManifest(data, skillDirectory, underscoreName) {
   if (!fs.existsSync(`${skillDirectory}/project/submission`)) {
     exec(
       `cd ${skillDirectory}/project && npm i && mkdir submission && zip -X -r submission/index.zip * -x build build/* *.xlsx Skills Skills/* test test/* speechAssets speechAssets/* index.zip deploy.sh > /dev/null`
-      // { env: { ...process.env } },
     );
   } else {
     exec(
       `cd ${skillDirectory}/project && npm i && zip -X -r submission/index.zip * -x build build/* *.xlsx Skills Skills/* test test/* speechAssets speechAssets/* index.zip deploy.sh > /dev/null`
-      // { env: { ...process.env } },
     );
   }
 
