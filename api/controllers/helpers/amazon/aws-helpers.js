@@ -100,6 +100,20 @@ const deployToAWSLambda = (skillDirectory, underscoreName) => {
   });
 };
 
+const deploy = (data, skillDirectory, underscoreName) => {
+  console.log('deploying to AWS started...');
+
+  awsSetup()
+    .then(deployToAWSLambda(skillDirectory, underscoreName)
+      .then((result) => {
+        console.log('======================================================');
+        console.log(result);
+      })
+      .catch((err) => console.log('lambda err: ', err.message))
+    );
+};
+
 exports.awsSetup = awsSetup;
 exports.awsS3listbuckets = awsS3listbuckets;
 exports.deployToAWSLambda = deployToAWSLambda;
+exports.deploy = deploy;
