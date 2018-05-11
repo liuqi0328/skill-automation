@@ -34,8 +34,8 @@ exports.create_skill = (req, res) => {
 
   switch (platform) {
     case 'alexa':
-      // createAlexaSkillManifest(data, skillDirectory, underscoreName);
-      awsHelpers.deploy(data, skillDirectory, underscoreName);
+      createAlexaSkillManifest(data, skillDirectory, underscoreName);
+      // awsHelpers.deploy(data, skillDirectory, underscoreName);
       break;
     case 'google':
     case 'cortana':
