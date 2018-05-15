@@ -4,7 +4,7 @@ const fs = require('fs');
 // const exec = require('child_process').execSync;
 
 // AMAZON HELPERS
-const createAlexaSkillManifest = require('./helpers/amazon/create-alexa-skill-manifest');
+const createAlexaSkillManifest = require('./helpers/amazon/create-alexa-skill');
 const awsHelpers = require('./helpers/amazon/aws-helpers');
 
 // GOOGLE HELPERS

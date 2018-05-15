@@ -4,7 +4,7 @@ const fs = require('fs');
 const exec = require('child_process').execSync;
 
 module.exports = function(data, skillDirectory, underscoreName) {
-  console.log('build started...');
+  console.log('build started...!');
 
   // BUILD SKILL INTERACTION MODEL
   if (!fs.existsSync(`${skillDirectory}/models`)) {
@@ -29,7 +29,7 @@ module.exports = function(data, skillDirectory, underscoreName) {
                      JSON.stringify(interactionModel));
   });
 
-  console.log('interaction model saved!');
+  console.log('interaction model saved...!');
 
   // SKILL JSON
   /**
@@ -146,7 +146,7 @@ module.exports = function(data, skillDirectory, underscoreName) {
   fs.writeFileSync(`${skillDirectory}/skill.json`,
                    JSON.stringify(skillJSON));
 
-  console.log('skill.json saved!');
+  console.log('skill.json saved...!');
 
   // BUILD SKILL LOGIC
   if (!fs.existsSync(`${skillDirectory}/project`)) {
@@ -176,7 +176,7 @@ module.exports = function(data, skillDirectory, underscoreName) {
   fs.writeFileSync(`${skillDirectory}/project/package.json`,
                    JSON.stringify(packageJSON));
 
-  console.log('package.json saved!');
+  console.log('package.json saved...!');
 
   // fs.createReadStream(shellScriptPath).pipe(fs.createWriteStream(`${skillDirectory}/project/create_package.sh`));
 
