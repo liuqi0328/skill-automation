@@ -1,0 +1,17 @@
+{
+	"platform": "alexa",
+	"skill_name": "",
+	"description": "",
+	"summary": "",
+	"intents": [
+		{
+		    "name": "MainMenuIntent",
+		    "samples": [
+		        "main menu",
+		        "go to main menu",
+		        "back to main menu"
+		    ]
+		}
+	],
+	"utterance_mapping": {}
+}

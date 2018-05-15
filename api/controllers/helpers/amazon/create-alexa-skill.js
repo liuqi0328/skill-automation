@@ -38,8 +38,8 @@ module.exports = function(data, skillDirectory, underscoreName) {
   const keyWord = [skillName];
   const endPoint = `function:${underscoreName}`;
   const testingInstructions = `TEST TESTING INSTRUCTIONS`;
-  const summary = `TEST SUMMARY`;
-  const description = `TEST DESCRIPTION`;
+  const summary = data.summary;
+  const description = data.description;
   const examplePhrases = [
     `Alexa, open ${skillName}.`,
   ];
@@ -157,11 +157,10 @@ module.exports = function(data, skillDirectory, underscoreName) {
   let packageJSON = {
     name: underscoreName,
     version: '1.0.0',
-    description: '',
+    description: description,
     main: 'index.js',
     scripts: {
       test: 'echo \"Error: no test specified\" && exit 1',
-      start: 'nodemon server.js',
     },
     author: 'Fresh Digital Group',
     license: 'ISC',

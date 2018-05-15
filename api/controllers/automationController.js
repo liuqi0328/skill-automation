@@ -20,18 +20,12 @@ exports.create_skill = (req, res) => {
   let underscoreName = skillName.replace(/\ /g, '_');
   let skillDirectory = filepath + '/' + underscoreName;
 
-  if (!platform) {
-    let err = {
-      message: 'You need to choose a platform.',
-    };
-    return res.send(err);
-  } else {
-    console.log('platform: ', platform);
-  }
-
   if (!fs.existsSync(filepath)) fs.mkdirSync(filepath);
   if (!fs.existsSync(skillDirectory)) fs.mkdirSync(skillDirectory);
 
+  let platformError = {
+    message: 'You need to choose a platform. Choose from: "alexa", "google", "cortana".',
+  };
   switch (platform) {
     case 'alexa':
       createAlexaSkillManifest(data, skillDirectory, underscoreName);
@@ -39,10 +33,12 @@ exports.create_skill = (req, res) => {
       break;
     case 'google':
     case 'cortana':
+    default:
+      return res.send(platformError);
   }
 
-  let message = {
+  let finishedMessage = {
     message: skillName + ' created!',
   };
-  res.send(message);
+  res.send(finishedMessage);
 };
