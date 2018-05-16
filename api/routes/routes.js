@@ -3,6 +3,6 @@
 module.exports = (app) => {
   let skillAutomation = require('../controllers/automationController');
 
-  app.route('/skills')
+  app.route('/api/v1/skills')
     .post(skillAutomation.create_skill);
 };
