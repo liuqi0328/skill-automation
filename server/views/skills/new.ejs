@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+</head>
+<body>
+  <form action="/skills/new" method="post">
+    <div>
+      <label for="skill_name">Enter name: </label>
+      <input id="skill_name" type="text" name="skill_name" value="Enter name for skill.">
+    </div>
+    <div>
+      <label for="platform_name">Enter platform: </label>
+      <input id="platform_name" type="text" name="platform" value="Enter platform for skill.">
+    </div>
+    <div>
+      <input type="submit" value="OK">
+    </div>
+  </form>
+  <footer>
+    <% include ../partials/footer %>
+  </footer>
+  <script>
+    let tmp = '<%= msg %>';
+    if (tmp) {
+      alert(tmp);
+    }
+  </script>
+</body>
+</html>

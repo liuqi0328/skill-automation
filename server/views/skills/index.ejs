@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+	<div id="amazon-root"></div>
+	<script type="text/javascript">
+
+	  window.onAmazonLoginReady = function() {
+	    amazon.Login.setClientId('amzn1.application-oa2-client.097ffe4a4e0444ab88c76af39d6ba8be');
+	  };
+	  (function(d) {
+	    var a = d.createElement('script'); a.type = 'text/javascript';
+	    a.async = true; a.id = 'amazon-login-sdk';
+	    a.src = 'https://api-cdn.amazon.com/sdk/login1.js';
+	    d.getElementById('amazon-root').appendChild(a);
+	  })(document);
+
+	</script>
+	<h1>Skills</h1>
+	<!-- <a href="/skills/new">Create Skill</a> -->
+	<div>
+		<a href="#" id="LoginWithAmazon">
+			Create Alexa Skill
+		  <!-- <img border="0" alt="Login with Amazon"
+		    src="https://images-na.ssl-images-amazon.com/images/G/01/lwa/btnLWA_gold_156x32.png"
+		    width="156" height="32" /> -->
+		</a>
+		<script type="text/javascript">
+
+		  document.getElementById('LoginWithAmazon').onclick = function() {
+		    options = {} ;
+		    options.scope = 'alexa::ask:skills:readwrite alexa::ask:models:readwrite';
+		    options.response_type = 'code';
+		    amazon.Login.authorize(options, 'http://localhost:8080/skills/alexa/new');
+		    return false;
+		  };
+
+		</script>
+	</div>
+	<div>
+		<a href="/skills/google/new">Create Google Action</a>
+	</div>
+	<div>
+		<a href="/skills/cortana/new">Create Cortana Skill</a>
+	</div>
+</body>
+<footer>
+  <% include ../partials/footer %>
+</footer>
+</html>

@@ -3,6 +3,7 @@
 module.exports = (app) => {
   let home = require('../controller/home-controller');
   let skills = require('../controller/skills-controller');
+  let alexaSkills = require('../controller/alexa-skills-controller');
 
   app.route('/')
     .get(home.index);
@@ -10,7 +11,7 @@ module.exports = (app) => {
   app.route('/skills')
     .get(skills.index);
 
-  app.route('/skills/new')
-    .get(skills.create_get)
-    .post(skills.create_post);
+  app.route('/skills/alexa/new')
+    .get(alexaSkills.create_get)
+    .post(alexaSkills.create_post);
 };
