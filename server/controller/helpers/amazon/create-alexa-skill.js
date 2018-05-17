@@ -235,8 +235,9 @@ let createSkillFiles = (data, skillDirectory, underscoreName) => {
       nodemon: '^1.17.4',
     },
     dependencies: {
-      express: '^4.16.3',
-      mongoose: '^5.0.17',
+      'ask-sdk': '^2.0.1',
+      'express': '^4.16.3',
+      'mongoose': '^5.0.17',
     },
   };
   fs.writeFileSync(`${skillDirectory}/project/package.json`,
@@ -245,7 +246,66 @@ let createSkillFiles = (data, skillDirectory, underscoreName) => {
   console.log('package.json saved...!');
 
   // CREATE index.js
-  let sourceCode = `'use strict'; const Alexa = require('ask-sdk'); const skillBuilder = Alexa.SkillBuilders.standard(); exports.handler = skillBuilder.addRequestHandlers().addErrorHandlers().withTableName().withAutoCreateTable(true).addResponseInterceptors(PersistenceSavingResponseInterceptor).lambda();`;
+  //
+  //
+  //
+  // FINISH CREATING INDEX FILE
+  let sourceCode =
+`'use strict';
+const Alexa = require('ask-sdk');
+const unhandledMessage = 'I couldn\\'t understand what you said, please say it again.';
+` + createIntentHandler('intentName', 'speech', 'repromptSpeech') +
+`
+const SessionEndedHandler = {
+  canHandle(handlerInput) {
+    const request = handlerInput.requestEnvelope.request;
+    return request.type === 'SessionEndedRequest';
+  },
+  handle(handlerInput) {
+    console.log('Session ended with reason: ' + handlerInput.requestEnvelope.request.reason);
+    return handlerInput.responseBuilder.getResponse();
+  },
+};
+const ErrorHandler = {
+  canHandle() {
+    return true;
+  },
+  handle(handlerInput, error) {
+    const request = handlerInput.requestEnvelope.request;
+    console.log('Error handled: ' + error.message);
+    console.log('Original request was ' + JSON.stringify(request, null, 2));
+
+    return handlerInput.responseBuilder
+      .speak(unhandledMessage)
+      .reprompt(unhandledMessage)
+      .getResponse();
+  },
+};
+const PersistenceSavingResponseInterceptor = {
+  process(handlerInput) {
+    return new Promise((resolve, reject) => {
+      let sessionAttributes =
+        handlerInput.attributesManager.getSessionAttributes();
+      handlerInput.attributesManager.setPersistentAttributes(sessionAttributes);
+      handlerInput.attributesManager.savePersistentAttributes()
+        .then(() => {
+          resolve();
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  },
+};
+const skillBuilder = Alexa.SkillBuilders.standard();
+exports.handler = skillBuilder
+  .addRequestHandlers()
+  .addErrorHandlers()
+  .withTableName()
+  .withAutoCreateTable(true)
+  .addResponseInterceptors(PersistenceSavingResponseInterceptor)
+  .lambda();
+`;
   fs.writeFileSync(`${skillDirectory}/project/index.js`, sourceCode);
   // fs.createReadStream(shellScriptPath).pipe(fs.createWriteStream(`${skillDirectory}/project/create_package.sh`));
 
@@ -434,3 +494,27 @@ exports.getAccessToken = getAccessToken;
 // exports.checkExistingSkill = checkExistingSkill;
 exports.updateInteractionModel = updateInteractionModel;
 exports.create = create;
+
+function createIntentHandler(intentName, speech, repromptSpeech) {
+  let handler =
+`const ${intentName}Handler = {
+  canHandle(handlerInput) {
+    const request = handlerInput.requestEnvelope.request;
+
+    return request.type === 'IntentRequest'
+        && request.intent.name === '${intentName}';
+  },
+  handle(handlerInput) {
+    console.log('${intentName}Handler');
+
+    let speech = '${speech}';
+    let repromptSpeech = '${repromptSpeech}';
+
+    return handlerInput.responseBuilder
+      .speak(speech)
+      .reprompt(repromptSpeech)
+      .getResponse();
+  },
+};`;
+  return handler;
+}
