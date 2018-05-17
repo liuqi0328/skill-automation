@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= skillName %></title>
+  </head>
+  <body>
+    <h1><%= skillName %></h1>
+    <p>Skill ID: <%= skillId %></p>
+    <p id="skill_status"></p>
+    <a href="/skills">Back to Main Menu</a>
+  <script>
+    document.getElementById('skill_status').innerHTML = 'Skill Upload Started.';
+  </script>
+  </body>
+  <footer>
+    <% include ../../partials/footer %>
+  </footer>
+</html>

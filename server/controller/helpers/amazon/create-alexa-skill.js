@@ -36,23 +36,54 @@ let createSkillFiles = (data, skillDirectory, underscoreName) => {
     fs.mkdirSync(`${skillDirectory}/models`);
   }
 
+  // BUILD INTENTS
   let intents = [
     {
-      'name': 'GetNewFactIntent',
+      'name': 'AMAZON.StopIntent',
+      'samples': [],
+    },
+    {
+      'name': 'AMAZON.CancelIntent',
+      'samples': [],
+    },
+    {
+      'name': 'AMAZON.HelpIntent',
+      'samples': [],
+    },
+    {
+      'name': 'GetStandingIntent',
       'slots': [],
       'samples': [
-        'Give me a fact',
-        'tell me a fact',
+        'standing',
+        'get standing',
+        'get current standing',
       ],
     },
   ];
+  let inputIntents = data.intents;
+  if (inputIntents) {
+    for (let i = 0; i < inputIntents.length; i++) {
+      intents.push(inputIntents[i]);
+    }
+  }
+
+  // BUILD SLOT TYPES
+  let types = [];
+  let inputTypes = data.types;
+  if (inputTypes) {
+    for (let j = 0; j < inputTypes.length; j++) {
+      types.push(inputTypes[j]);
+    }
+  }
+
+  // CREATE INTERACTION MODELS FOR LOCALES
   const skillName = underscoreName.replace(/_/g, ' ');
-  const languages = ['en-US', 'en-GB', 'en-AU', 'en-CA', 'en-IN'];
+  const languages = data.locales;
   const interactionModel = {
     'interactionModel': {
       'languageModel': {
         'invocationName': skillName.toLowerCase(),
-        'types': [],
+        'types': types,
         'intents': intents,
       },
     },
@@ -213,6 +244,9 @@ let createSkillFiles = (data, skillDirectory, underscoreName) => {
 
   console.log('package.json saved...!');
 
+  // CREATE index.js
+  let sourceCode = `'use strict'; const Alexa = require('ask-sdk'); const skillBuilder = Alexa.SkillBuilders.standard(); exports.handler = skillBuilder.addRequestHandlers().addErrorHandlers().withTableName().withAutoCreateTable(true).addResponseInterceptors(PersistenceSavingResponseInterceptor).lambda();`;
+  fs.writeFileSync(`${skillDirectory}/project/index.js`, sourceCode);
   // fs.createReadStream(shellScriptPath).pipe(fs.createWriteStream(`${skillDirectory}/project/create_package.sh`));
 
   // NPM BUILD
@@ -273,7 +307,7 @@ let createSkill = (skillDirectory, access_token) => {
     .then((result) => {
       console.log('create skill api result headers: ', result.headers);
       console.log('create skill api result body: ', result.body);
-      return result;
+      return result.body.skillId;
     })
     .catch((error) => {
       // console.error(error);
@@ -303,7 +337,7 @@ let updateSkill = (skillDirectory, skillId, access_token) => {
     .then((result) => {
       console.log('update skill api result headers: ', result.headers);
       console.log('update skill api result body: ', result.body);
-      return result;
+      return skillId;
     })
     .catch((error) => {
       // console.error(error);
@@ -325,7 +359,7 @@ let checkExistingSkill = (underscoreName, access_token) => {
   };
   return rp(checkOptions)
     .then((result) => {
-      console.log('skill list: ', result);
+      // console.log('skill list: ', result);
       let skills = result.skills;
       let existingSkill = skills.find((skill) => {
         return (skill.nameByLocale['en-US']
@@ -343,13 +377,18 @@ let checkExistingSkill = (underscoreName, access_token) => {
     });
 };
 
-let updateInteractionModel = (skillDirectory, skillId, access_token) => {
+let updateInteractionModel = (skillDirectory, skillId, locale, access_token) => {
+  let allLocales = ['en-US', 'en-AU', 'en-GB', 'en-IN', 'en-CA'];
+  if (!allLocales.includes(locale)) {
+    console.log('Incorrect locale...');
+    return 'locale error';
+  }
   let interactionModel =
-    JSON.parse(fs.readFileSync(`${skillDirectory}/models/en-US.json`, 'utf8'));
+    JSON.parse(fs.readFileSync(`${skillDirectory}/models/${locale}.json`, 'utf8'));
   let updateInteractionModelOptions = {
     method: 'PUT',
     uri: alexaBaseUrl +
-      `/v1/skills/${skillId}/stages/development/interactionModel/locales/en-US`,
+      `/v1/skills/${skillId}/stages/development/interactionModel/locales/${locale}`,
     headers: {
       Authorization: access_token,
     },
@@ -357,35 +396,41 @@ let updateInteractionModel = (skillDirectory, skillId, access_token) => {
     json: true,
     resolveWithFullResponse: true,
   };
-  return rp(updateInteractionModelOptions)
-    .then((result) => {
-      console.log('update interaction model api result headers: ', result.headers);
-      console.log('update interaction model api result body: ', result.body);
-      return result;
-    })
-    .catch((error) => {
-      // console.error(error);
-      console.log('update interaction model error: ', error.message);
-      return error;
-    });
+  rp(updateInteractionModelOptions);
+  // return rp(updateInteractionModelOptions)
+  //   .then((result) => {
+  //     console.log('update interaction model api result headers: ', result.headers);
+  //     console.log('update interaction model api result body: ', result.body);
+  //     return result;
+  //   })
+  //   .catch((error) => {
+  //     // console.error(error);
+  //     console.log('update interaction model error: ', error.message);
+  //     return error;
+  //   });
 };
 
 let create = (skillDirectory, underscoreName, access_token) => {
-  checkExistingSkill(underscoreName, access_token)
+  return checkExistingSkill(underscoreName, access_token)
     .then((result) => {
       let existingSkill = result;
       if (existingSkill) {
         let skillId = existingSkill.skillId;
-        updateSkill(skillDirectory, skillId, access_token)
-          .then(() => updateInteractionModel(skillDirectory, skillId, access_token));
+        return updateSkill(skillDirectory, skillId, access_token);
+          // .then(updateInteractionModel(skillDirectory, skillId, access_token));
       } else {
-        createSkill(skillDirectory, access_token);
+        return createSkill(skillDirectory, access_token);
+          // .then((result) => {
+          //   let skillId = result.body.skillId;
+          //   updateInteractionModel(skillDirectory, skillId, access_token);
+          // });
       }
     });
 };
 
 exports.createSkillFiles = createSkillFiles;
-exports.createSkill = createSkill;
+// exports.createSkill = createSkill;
 exports.getAccessToken = getAccessToken;
-exports.checkExistingSkill = checkExistingSkill;
+// exports.checkExistingSkill = checkExistingSkill;
+exports.updateInteractionModel = updateInteractionModel;
 exports.create = create;
