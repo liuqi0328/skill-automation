@@ -97,9 +97,6 @@ let createSkillFiles = (data, skillDirectory, underscoreName) => {
   console.log('interaction model saved...!');
 
   // SKILL JSON
-  /**
-   * !!!!!!!!!!!!!!!!!!!!!UPDATE ICON URL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   */
   const keyWord = [skillName];
   const endPoint = `function:${underscoreName}`;
   const testingInstructions = `TEST TESTING INSTRUCTIONS`;
@@ -108,10 +105,10 @@ let createSkillFiles = (data, skillDirectory, underscoreName) => {
   const examplePhrases = [
     `Alexa, open ${skillName}.`,
   ];
-  const category = 'SMART_HOME';
+  const category = 'SMART_HOME'; // CHANGE CATEGORY
   const imageName = underscoreName.replace(/_/g, '-');
-  const smallIconSrc = `https://s3.amazonaws.com/${imageName}/assets/images/108/${imageName}108.png`;
-  const largeIconSrc = `https://s3.amazonaws.com/${imageName}/assets/images/512/${imageName}512.png`;
+  const smallIconSrc = `https://s3.amazonaws.com/${imageName}/assets/images/108/${imageName}108.png`; // UPDATE SKILL ICON LINKS
+  const largeIconSrc = `https://s3.amazonaws.com/${imageName}/assets/images/512/${imageName}512.png`; // UPDATE SKILL ICON LINKS
   const privacyPolicyUrl = 'https://www.freshdigitalgroup.com/privacy-policy-for-bots';
   const termsOfUseUrl = 'https://www.freshdigitalgroup.com/voice-applications-amazon-terms-of-use';
 
@@ -232,12 +229,25 @@ let createSkillFiles = (data, skillDirectory, underscoreName) => {
     author: 'Fresh Digital Group',
     license: 'ISC',
     devDependencies: {
-      nodemon: '^1.17.4',
+      'bespoken-tools': '^1.0.5',
+      'chai': '^3.5.0',
+      'chai-string': '^1.4.0',
+      'eslint': '^3.19.0',
+      'eslint-config-airbnb-base': '^12.1.0',
+      'eslint-config-google': '^0.8.0',
+      'eslint-plugin-import': '^2.8.0',
+      'eslint-plugin-json': '^1.2.0',
+      'gulp': '^3.9.1',
+      'gulp-eslint': '^3.0.1',
+      'gulp-git': '^2.1.0',
+      'gulp-jsbeautifier': '^2.1.2',
+      'gulp-jshint': '^2.0.4',
+      'gulp-mocha': '^4.3.1',
+      'mocha': '^3.4.2',
+      'run-sequence': '^1.2.2',
     },
     dependencies: {
       'ask-sdk': '^2.0.1',
-      'express': '^4.16.3',
-      'mongoose': '^5.0.17',
     },
   };
   fs.writeFileSync(`${skillDirectory}/project/package.json`,
@@ -367,7 +377,12 @@ let createSkill = (skillDirectory, access_token) => {
     .then((result) => {
       console.log('create skill api result headers: ', result.headers);
       console.log('create skill api result body: ', result.body);
-      return result.body.skillId;
+      // return result.body.skillId;
+      let data = {
+        skillId: result.body.skillId,
+        statusLink: result.headers.location,
+      };
+      return data;
     })
     .catch((error) => {
       // console.error(error);
@@ -397,7 +412,11 @@ let updateSkill = (skillDirectory, skillId, access_token) => {
     .then((result) => {
       console.log('update skill api result headers: ', result.headers);
       console.log('update skill api result body: ', result.body);
-      return skillId;
+      let data = {
+        skillId: skillId,
+        statusLink: result.headers.location,
+      };
+      return data;
     })
     .catch((error) => {
       // console.error(error);
@@ -437,7 +456,7 @@ let checkExistingSkill = (underscoreName, access_token) => {
     });
 };
 
-let updateInteractionModel = (skillDirectory, skillId, locale, access_token) => {
+let updateInteractionModel = async (skillDirectory, skillId, locale, access_token) => {
   let allLocales = ['en-US', 'en-AU', 'en-GB', 'en-IN', 'en-CA'];
   if (!allLocales.includes(locale)) {
     console.log('Incorrect locale...');
@@ -456,36 +475,30 @@ let updateInteractionModel = (skillDirectory, skillId, locale, access_token) => 
     json: true,
     resolveWithFullResponse: true,
   };
-  rp(updateInteractionModelOptions);
-  // return rp(updateInteractionModelOptions)
-  //   .then((result) => {
-  //     console.log('update interaction model api result headers: ', result.headers);
-  //     console.log('update interaction model api result body: ', result.body);
-  //     return result;
-  //   })
-  //   .catch((error) => {
-  //     // console.error(error);
-  //     console.log('update interaction model error: ', error.message);
-  //     return error;
-  //   });
+  return rp(updateInteractionModelOptions)
+    .then((result) => {
+      console.log('update interaction model api result headers: ', result.headers);
+      console.log('update interaction model api result body: ', result.body);
+      return result;
+    })
+    .catch((error) => {
+      // console.error(error);
+      console.log('update interaction model error: ', error.message);
+      return error;
+    });
 };
 
-let create = (skillDirectory, underscoreName, access_token) => {
-  return checkExistingSkill(underscoreName, access_token)
-    .then((result) => {
-      let existingSkill = result;
-      if (existingSkill) {
-        let skillId = existingSkill.skillId;
-        return updateSkill(skillDirectory, skillId, access_token);
-          // .then(updateInteractionModel(skillDirectory, skillId, access_token));
-      } else {
-        return createSkill(skillDirectory, access_token);
-          // .then((result) => {
-          //   let skillId = result.body.skillId;
-          //   updateInteractionModel(skillDirectory, skillId, access_token);
-          // });
-      }
-    });
+let create = async (skillDirectory, underscoreName, access_token) => {
+  let skillId;
+  let data;
+  let check = await checkExistingSkill(underscoreName, access_token);
+  if (check) {
+    skillId = check.skillId;
+    data = await updateSkill(skillDirectory, skillId, access_token);
+  } else {
+    data = await createSkill(skillDirectory, access_token);
+  }
+  return data;
 };
 
 exports.createSkillFiles = createSkillFiles;

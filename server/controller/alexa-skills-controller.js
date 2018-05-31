@@ -8,6 +8,7 @@ const filepath = process.cwd() + '/temp';
 
 const createAlexaSkill = require('./helpers/amazon/create-alexa-skill');
 const awsHelpers = require('./helpers/amazon/aws-helpers');
+const dbHelpers = require('./helpers/db-helper');
 
 const platformError = 'You need to choose a platform. Choose from: "alexa", "google", "cortana".';
 let code;
@@ -25,7 +26,7 @@ function create_get(req, res) {
   res.render('skills/alexa/new', {msg: ''});
 }
 
-function create_post(req, res) {
+async function create_post(req, res) {
   console.log('create skill post access token: ', access_token);
   console.log('req body: ', req.body);
 
@@ -54,39 +55,65 @@ function create_post(req, res) {
       createAlexaSkill.createSkillFiles(data, skillDirectory, underscoreName);
       console.log('authorization code: ', code);
 
-      // GET ACCESS TOKEN USING THE AUTHORIZATION CODE FROM LOGIN WITH AMAZON
-      createAlexaSkill.getAccessToken(code)
-        .then((result) => {
-          access_token = result.access_token;
-          console.log('access token: ', access_token);
+      let accessToken = await createAlexaSkill.getAccessToken(code);
+      access_token = accessToken.access_token;
+      console.log('access token: ', access_token);
 
-          // DEPLOY FUNCTION TO LAMBDA
-          awsHelpers.deploy(data, skillDirectory, underscoreName)
-            // CREATE SKILL IN ALEXA DEVELOPER PORTAL
-            .then(() => {
-              createAlexaSkill.create(skillDirectory, underscoreName, access_token)
-                .then((result) => {
-                  let skillId = result;
-                  console.log(skillId);
-                  // // UPDATE INTERACTION MODELS
-                  // if (skillId) {
-                  //   for (let i = 0; i < arrayOfLocales.length; i++) {
-                  //     let locale = arrayOfLocales[i];
-                  //     console.log(locale + ' building...!');
-                  //     createAlexaSkill.updateInteractionModel(skillDirectory, skillId, locale, access_token);
-                  //   }
-                  // }
-                  // res.redirect(`/skills/alexa/${skillId}`);
-                  res.redirect(url.format({
-                    pathname: `/skills/alexa/${underscoreName}`,
-                    query: {
-                      skillName: skillName,
-                      skillId: skillId,
-                    },
-                  }));
-                });
-            });
-        });
+      await awsHelpers.deploy(data, skillDirectory, underscoreName);
+      let skillData = await createAlexaSkill.create(skillDirectory, underscoreName, access_token);
+      console.log('await skill data: ', skillData);
+
+      let dbData = {
+        skillName: underscoreName,
+        skillId: skillData.skillId,
+        skillStatusLink: skillData.statusLink,
+      };
+      console.log('final db data: ', dbData);
+      let db = await dbHelpers.alexa_skill_to_db(dbData);
+      console.log('final db entry: ', db);
+
+      res.redirect(url.format({
+        pathname: `/skills/alexa/${underscoreName}`,
+        query: {
+          skillName: skillName,
+          skillId: skillData.skillId,
+        },
+      }));
+
+      // // GET ACCESS TOKEN USING THE AUTHORIZATION CODE FROM LOGIN WITH AMAZON
+      // createAlexaSkill.getAccessToken(code)
+      //   .then((result) => {
+      //     access_token = result.access_token;
+      //     console.log('access token: ', access_token);
+
+      //     // DEPLOY FUNCTION TO LAMBDA
+      //     awsHelpers.deploy(data, skillDirectory, underscoreName)
+      //       // CREATE SKILL IN ALEXA DEVELOPER PORTAL
+      //       .then(() => {
+      //         createAlexaSkill.create(skillDirectory, underscoreName, access_token)
+      //           .then((result) => {
+      //             let skillId = result;
+      //             console.log(skillId);
+      //             dbHelpers.alexa_skill_to_db(data);
+      //             // // UPDATE INTERACTION MODELS
+      //             // if (skillId) {
+      //             //   for (let i = 0; i < arrayOfLocales.length; i++) {
+      //             //     let locale = arrayOfLocales[i];
+      //             //     console.log(locale + ' building...!');
+      //             //     createAlexaSkill.updateInteractionModel(skillDirectory, skillId, locale, access_token);
+      //             //   }
+      //             // }
+      //             // res.redirect(`/skills/alexa/${skillId}`);
+      //             res.redirect(url.format({
+      //               pathname: `/skills/alexa/${underscoreName}`,
+      //               query: {
+      //                 skillName: skillName,
+      //                 skillId: skillId,
+      //               },
+      //             }));
+      //           });
+      //       });
+      //   });
       break;
     case 'google':
     case 'cortana':

@@ -1,26 +1,37 @@
 'use strict';
 
-let express = require('express');
-let path = require('path');
-let port = process.env.PORT || 8080;
-let bodyParser = require('body-parser');
+const express = require('express');
+const path = require('path');
+const port = process.env.PORT || 8080;
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 
 let app = express();
 
-app.set('views', path.join(__dirname, '/server/views'));
-app.set('view engine', 'ejs');
+mongoose.Promise = global.Promise;
+mongoose.connect('mongodb://localhost/skillAutomationdb');
 
-app.use(bodyParser.urlencoded({extended: true}));
-app.use(bodyParser.json());
+let db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function() {
+  // we're connected!
+  console.log('db connected!');
 
-// API ROUTES
-let apiRoutes = require('./api/routes/routes');
-apiRoutes(app);
+  app.set('views', path.join(__dirname, '/server/views'));
+  app.set('view engine', 'ejs');
 
-// WEB APP ROUTES
-let webRoutes = require('./server/routes/routes');
-webRoutes(app);
+  app.use(bodyParser.urlencoded({extended: true}));
+  app.use(bodyParser.json());
 
-app.listen(port);
+  // API ROUTES
+  let apiRoutes = require('./api/routes/routes');
+  apiRoutes(app);
 
-console.log('API server started on: ' + port);
+  // WEB APP ROUTES
+  let webRoutes = require('./server/routes/routes');
+  webRoutes(app);
+
+  app.listen(port);
+
+  console.log('API server started on: ' + port);
+});

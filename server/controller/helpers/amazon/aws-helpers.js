@@ -102,24 +102,7 @@ const deployToAWSLambda = (skillDirectory, underscoreName) => {
             reject(err);
           } else {
             console.log('update lambda: ', data);
-            // resolve(data);
-
-            // let permissionsParams = {
-            //   Action: 'lambda:InvokeFunction', /* required */
-            //   FunctionName: underscoreName, /* required */
-            //   Principal: 'alexa-appkit.amazon.com', /* required */
-            //   StatementId: '1234', /* required */
-            // };
-            // lambda.addPermission(permissionsParams, function(err, data) {
-            //   if (err) {
-            //     console.log(err, err.stack); // an error occurred
-            //     reject(err);
-            //   } else {
-            //     console.log('add permission: ', data);           // successful response
-            //     resolve(data);
-            //   }
-            // });
-            addPermissionToLambda(lambda, underscoreName, resolve, reject);
+            resolve(data);
           }
         });
       }
