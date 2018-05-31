@@ -17,7 +17,7 @@ module.exports = (app) => {
     .get(alexaSkills.create_get)
     .post(alexaSkills.create_post);
 
-  app.route('/skills/alexa/:id')
+  app.route('/skills/alexa/:skillName')
     .get(alexaSkills.skill_get);
 
   // app.route('/skills/google/new')

@@ -9,6 +9,7 @@ const filepath = process.cwd() + '/temp';
 const createAlexaSkill = require('./helpers/amazon/create-alexa-skill');
 const awsHelpers = require('./helpers/amazon/aws-helpers');
 
+const platformError = 'You need to choose a platform. Choose from: "alexa", "google", "cortana".';
 let code;
 let access_token;
 
@@ -47,7 +48,6 @@ function create_post(req, res) {
   if (!fs.existsSync(filepath)) fs.mkdirSync(filepath);
   if (!fs.existsSync(skillDirectory)) fs.mkdirSync(skillDirectory);
 
-  let platformError = 'You need to choose a platform. Choose from: "alexa", "google", "cortana".';
   switch (platform) {
     case 'alexa':
       // CREATE FILES FOR SKILL CREATION/UPDATE
@@ -78,7 +78,7 @@ function create_post(req, res) {
                   // }
                   // res.redirect(`/skills/alexa/${skillId}`);
                   res.redirect(url.format({
-                    pathname: `/skills/alexa/${skillId}`,
+                    pathname: `/skills/alexa/${underscoreName}`,
                     query: {
                       skillName: skillName,
                       skillId: skillId,
