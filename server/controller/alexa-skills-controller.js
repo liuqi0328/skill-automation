@@ -23,9 +23,15 @@ let access_token;
 exports.index = async (req, res) => {
   console.log('skill index');
   console.log('skill index code: ', req.query.code);
-  if (req.query.code) code = req.query.code;
-  let accessToken = await createAlexaSkill.getAccessToken(code);
-  access_token = accessToken.access_token;
+  if (req.query.code) {
+    code = req.query.code;
+  }
+
+  if (!access_token) {
+    let accessToken = await createAlexaSkill.getAccessToken(code);
+    access_token = accessToken.access_token;
+  }
+  // access_token = accessToken.access_token;
   console.log('skill index access token: ', access_token);
 
   let skills = await dbHelpers.get_all_alexa_skills();
@@ -85,19 +91,26 @@ exports.create_post = async (req, res) => {
 
   awsHelpers.addFileToS3(skillDirectory, underscoreName);
 
-  res.redirect(url.format({
-    pathname: `/skills/alexa/${underscoreName}`,
-    query: {
-      skillName: skillName,
-      skillId: skillData.skillId,
-    },
-  }));
+  res.redirect('/skills/alexa');
+  // res.redirect(url.format({
+  //   pathname: `/skills/alexa/${underscoreName}`,
+  //   query: {
+  //     skillName: skillName,
+  //     skillId: skillData.skillId,
+  //   },
+  // }));
 };
 
-exports.skill_get = (req, res) => {
+exports.skill_get = async (req, res) => {
   console.log('skill info page');
   console.log('req query: ', req.query);
   let skillId = req.query.skillId;
-  let skillName = req.query.skillName;
-  res.render('skills/alexa/skill', {skillName: skillName, skillId: skillId});
+  let skill = await dbHelpers.get_one_alexa_skill(skillId);
+  let skillName = skill.name;
+  let manifestStatusLink = skill.skillStatusLink;
+  let result = await createAlexaSkill.checkManifestStatus(manifestStatusLink, access_token);
+  if (result === 'err') res.redirect('/skills/alexa');
+  let status = result.manifest.lastUpdateRequest.status;
+
+  res.render('skills/alexa/skill', {skillName: skillName, skillId: skillId, status: status});
 };

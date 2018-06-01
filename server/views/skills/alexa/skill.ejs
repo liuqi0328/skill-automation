@@ -6,10 +6,16 @@
   <body>
     <h1><%= skillName %></h1>
     <p>Skill ID: <%= skillId %></p>
-    <p id="skill_status"></p>
+    <p id="skill-status">Skill Uploading...</p>
+    <a href="/skills" id="interaction-model" type="hidden">Build Interaction Model</a>
+    <br/>
     <a href="/skills">Back to Main Menu</a>
-  <script>
-    document.getElementById('skill_status').innerHTML = 'Skill Upload Started.';
+  <script type="text/javascript">
+    let status = <%-JSON.stringify(status)%>;
+    if (status === 'SUCCEEDED') {
+      document.getElementById('skill-status').innerHTML = 'Skill Upload Successful!';
+      document.getElementById('interaction-model').style.visibility = 'visible';
+    }
   </script>
   </body>
   <footer>

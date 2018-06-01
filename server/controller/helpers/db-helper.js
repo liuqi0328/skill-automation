@@ -39,3 +39,11 @@ exports.get_all_alexa_skills = async () => {
   console.log('skill index: ', skills);
   return skills;
 };
+
+exports.get_one_alexa_skill = async (skillId) => {
+  let skill = await AlexaSkill.findOne({skillId: skillId}, (err, data) => {
+    console.log('getting data...');
+    return data;
+  });
+  return skill;
+};

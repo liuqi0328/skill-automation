@@ -323,9 +323,9 @@ exports.handler = skillBuilder
 
   // NPM BUILD
   if (!fs.existsSync(`${skillDirectory}/project/submission`)) {
-    exec(`cd ${skillDirectory}/project && npm i && mkdir submission && zip -X -r submission/index.zip * -x build build/* *.xlsx Skills Skills/* test test/* speechAssets speechAssets/* index.zip s3.zip deploy.sh > /dev/null`);
+    exec(`cd ${skillDirectory}/project && npm i && mkdir submission && zip -r -X submission/index.zip * > /dev/null`);
   } else {
-    exec(`cd ${skillDirectory}/project && npm i && zip -X -r submission/index.zip * -x build build/* *.xlsx Skills Skills/* test test/* speechAssets speechAssets/* index.zip s3.zip deploy.sh > /dev/null`);
+    exec(`cd ${skillDirectory}/project && npm i && zip -r -X submission/index.zip * > /dev/null`);
   }
 
   console.log('build finished...!');
@@ -503,12 +503,34 @@ let create = async (skillDirectory, underscoreName, access_token) => {
   return data;
 };
 
+let checkManifestStatus = (url, access_token) => {
+  let checkOptions = {
+    method: 'GET',
+    uri: alexaBaseUrl + url,
+    headers: {
+      Authorization: access_token,
+    },
+    json: true,
+    // resolveWithFullResponse: true,
+  };
+  return rp(checkOptions)
+    .then((result) => {
+      console.log('manifest status check: ', result);
+      return result;
+    })
+    .catch((err) => {
+      console.log('manifest status check err: ', err);
+      return 'err';
+    });
+};
+
 exports.createSkillFiles = createSkillFiles;
 // exports.createSkill = createSkill;
 exports.getAccessToken = getAccessToken;
 // exports.checkExistingSkill = checkExistingSkill;
 exports.updateInteractionModel = updateInteractionModel;
 exports.create = create;
+exports.checkManifestStatus = checkManifestStatus;
 
 function createIntentHandler(intentName, speech, repromptSpeech) {
   let handler =

@@ -24,7 +24,11 @@
           <td><%= data[i].created_date %></td>
           <td><%= data[i].updated_date %></td>
           <td>
-            <button type="button" onclick="checkStatus('<%= data[i].name %>', '<%= data[i].skillStatusLink %>')">Check Status</button>
+            <form action="/skills/alexa/<%= data[i].name %>" method="get">
+              <input id="skillId" type="hidden" name="skillId" value="<%= data[i].skillId %>">
+              <input type="submit" value="Check Status"/>
+            </form>
+            <!-- <button type="button" onclick="checkStatus('<%= data[i].name %>', '<%= data[i].skillStatusLink %>')">Check Status</button> -->
           </td>
           <td id=<%= data[i].name %>></td>
         </tr>
@@ -32,26 +36,26 @@
 
     </table>
   <script type="text/javascript">
-    let currentTime = new Date(Date.now());
-    let skills = <%-JSON.stringify(data)%>;
-    console.log(skills);
+    // let currentTime = new Date(Date.now());
+    // let skills = <%-JSON.stringify(data)%>;
+    // console.log(skills);
 
-    let access_token = <%-JSON.stringify(access_token)%>;
-    console.log(access_token);
-    function checkStatus(name, link) {
-      // document.getElementById(name).innerHTML = 'Success!';
-      let xhttp = new XMLHttpRequest({mozSystem: true});
-      xhttp.onreadystatechange = function() {
-        console.log('onclick function: ', this.body);
-        if (this.readyState == 4 && this.status == 200) {
-          document.getElementById(name).innerHTML = 'Success!';
-        }
-      };
-      xhttp.open("GET", "https://api.amazonalexa.com/" + link, true);
-      xhttp.setRequestHeader("Content-Type", "application/json");
-      xhttp.setRequestHeader('Authorization', access_token);
-      xhttp.send();
-    }
+    // let access_token = <%-JSON.stringify(access_token)%>;
+    // console.log(access_token);
+    // function checkStatus(name, link) {
+    //   // document.getElementById(name).innerHTML = 'Success!';
+    //   let xhttp = new XMLHttpRequest({mozSystem: true});
+    //   xhttp.onreadystatechange = function() {
+    //     console.log('onclick function: ', this.body);
+    //     if (this.readyState == 4 && this.status == 200) {
+    //       document.getElementById(name).innerHTML = 'Success!';
+    //     }
+    //   };
+    //   xhttp.open("GET", "https://api.amazonalexa.com/" + link, true);
+    //   xhttp.setRequestHeader("Content-Type", "application/json");
+    //   xhttp.setRequestHeader('Authorization', access_token);
+    //   xhttp.send();
+    // }
 
   </script>
   </body>
