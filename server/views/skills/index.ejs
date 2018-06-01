@@ -22,7 +22,7 @@
 	<!-- <a href="/skills/new">Create Skill</a> -->
 	<div>
 		<a href="#" id="LoginWithAmazon">
-			Create Alexa Skill
+			Alexa Skills
 		  <!-- <img border="0" alt="Login with Amazon"
 		    src="https://images-na.ssl-images-amazon.com/images/G/01/lwa/btnLWA_gold_156x32.png"
 		    width="156" height="32" /> -->
@@ -33,7 +33,7 @@
 		    options = {} ;
 		    options.scope = 'alexa::ask:skills:readwrite alexa::ask:models:readwrite';
 		    options.response_type = 'code';
-		    amazon.Login.authorize(options, 'http://localhost:8080/skills/alexa/new');
+		    amazon.Login.authorize(options, 'http://localhost:8080/skills/alexa');
 		    return false;
 		  };
 

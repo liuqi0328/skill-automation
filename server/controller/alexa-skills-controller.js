@@ -19,19 +19,32 @@ let access_token;
 //   res.render('skills/index');
 // }
 
-function create_get(req, res) {
-  console.log('skills create get');
-  console.log('create skill get code: ', req.query.code);
+exports.index = async (req, res) => {
+  console.log('skill index');
+  console.log('skill index code: ', req.query.code);
   if (req.query.code) code = req.query.code;
-  res.render('skills/alexa/new', {msg: ''});
-}
+  let accessToken = await createAlexaSkill.getAccessToken(code);
+  access_token = accessToken.access_token;
+  console.log('skill index access token: ', access_token);
 
-async function create_post(req, res) {
+  let skills = await dbHelpers.get_all_alexa_skills();
+  console.log('final skills list: ', skills);
+  res.render('skills/alexa/index', {data: skills, access_token: access_token});
+};
+
+exports.create_get = (req, res) => {
+  console.log('skills create get');
+  // console.log('create skill get code: ', req.query.code);
+  // if (req.query.code) code = req.query.code;
+  res.render('skills/alexa/new', {msg: ''});
+};
+
+exports.create_post = async (req, res) => {
   console.log('create skill post access token: ', access_token);
   console.log('req body: ', req.body);
 
   let data = req.body;
-  let platform = data.platform;
+  // let platform = data.platform;
   let skillName = data.skill_name;
   // BUILD LOCALES
   let inputLocales = data.locales;
@@ -49,95 +62,40 @@ async function create_post(req, res) {
   if (!fs.existsSync(filepath)) fs.mkdirSync(filepath);
   if (!fs.existsSync(skillDirectory)) fs.mkdirSync(skillDirectory);
 
-  switch (platform) {
-    case 'alexa':
-      // CREATE FILES FOR SKILL CREATION/UPDATE
-      createAlexaSkill.createSkillFiles(data, skillDirectory, underscoreName);
-      console.log('authorization code: ', code);
+  // CREATE FILES FOR SKILL CREATION/UPDATE
+  createAlexaSkill.createSkillFiles(data, skillDirectory, underscoreName);
+  console.log('authorization code: ', code);
 
-      let accessToken = await createAlexaSkill.getAccessToken(code);
-      access_token = accessToken.access_token;
-      console.log('access token: ', access_token);
+  // let accessToken = await createAlexaSkill.getAccessToken(code);
+  // access_token = accessToken.access_token;
+  console.log('access token: ', access_token);
 
-      await awsHelpers.deploy(data, skillDirectory, underscoreName);
-      let skillData = await createAlexaSkill.create(skillDirectory, underscoreName, access_token);
-      console.log('await skill data: ', skillData);
+  await awsHelpers.deploy(data, skillDirectory, underscoreName);
+  let skillData = await createAlexaSkill.create(skillDirectory, underscoreName, access_token);
+  console.log('await skill data: ', skillData);
 
-      let dbData = {
-        skillName: underscoreName,
-        skillId: skillData.skillId,
-        skillStatusLink: skillData.statusLink,
-      };
-      console.log('final db data: ', dbData);
-      let db = await dbHelpers.alexa_skill_to_db(dbData);
-      console.log('final db entry: ', db);
+  let dbData = {
+    skillName: underscoreName,
+    skillId: skillData.skillId,
+    skillStatusLink: skillData.statusLink,
+  };
+  console.log('final db data: ', dbData);
+  let db = await dbHelpers.alexa_skill_to_db(dbData);
+  console.log('final db entry: ', db);
 
-      res.redirect(url.format({
-        pathname: `/skills/alexa/${underscoreName}`,
-        query: {
-          skillName: skillName,
-          skillId: skillData.skillId,
-        },
-      }));
+  res.redirect(url.format({
+    pathname: `/skills/alexa/${underscoreName}`,
+    query: {
+      skillName: skillName,
+      skillId: skillData.skillId,
+    },
+  }));
+};
 
-      // // GET ACCESS TOKEN USING THE AUTHORIZATION CODE FROM LOGIN WITH AMAZON
-      // createAlexaSkill.getAccessToken(code)
-      //   .then((result) => {
-      //     access_token = result.access_token;
-      //     console.log('access token: ', access_token);
-
-      //     // DEPLOY FUNCTION TO LAMBDA
-      //     awsHelpers.deploy(data, skillDirectory, underscoreName)
-      //       // CREATE SKILL IN ALEXA DEVELOPER PORTAL
-      //       .then(() => {
-      //         createAlexaSkill.create(skillDirectory, underscoreName, access_token)
-      //           .then((result) => {
-      //             let skillId = result;
-      //             console.log(skillId);
-      //             dbHelpers.alexa_skill_to_db(data);
-      //             // // UPDATE INTERACTION MODELS
-      //             // if (skillId) {
-      //             //   for (let i = 0; i < arrayOfLocales.length; i++) {
-      //             //     let locale = arrayOfLocales[i];
-      //             //     console.log(locale + ' building...!');
-      //             //     createAlexaSkill.updateInteractionModel(skillDirectory, skillId, locale, access_token);
-      //             //   }
-      //             // }
-      //             // res.redirect(`/skills/alexa/${skillId}`);
-      //             res.redirect(url.format({
-      //               pathname: `/skills/alexa/${underscoreName}`,
-      //               query: {
-      //                 skillName: skillName,
-      //                 skillId: skillId,
-      //               },
-      //             }));
-      //           });
-      //       });
-      //   });
-      break;
-    case 'google':
-    case 'cortana':
-    default:
-      return res.render('skills/alexa/new', {msg: platformError});
-  }
-
-  // let finishedMessage = {
-  //   message: skillName + ' created!',
-  // };
-
-  // res.json(finishedMessage);
-  // res.redirect('/skills');
-}
-
-function skill_get(req, res) {
+exports.skill_get = (req, res) => {
   console.log('skill info page');
   console.log('req query: ', req.query);
   let skillId = req.query.skillId;
   let skillName = req.query.skillName;
   res.render('skills/alexa/skill', {skillName: skillName, skillId: skillId});
-}
-
-// exports.index = index;
-exports.create_get = create_get;
-exports.create_post = create_post;
-exports.skill_get = skill_get;
+};

@@ -27,6 +27,10 @@ let AlexaSkillSchema = new Schema({
     type: Date,
     default: Date.now,
   },
+  plaform: {
+    type: String,
+    default: 'alexa',
+  },
 });
 
 module.exports = mongoose.model('AlexaSkill', AlexaSkillSchema);

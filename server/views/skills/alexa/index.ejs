@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Alexa Skills</title>
+  </head>
+  <body>
+    <h1>Alexa Skills</h1>
+    <div>
+      <a href="/skills/alexa/new">Create Alexa Skill</a>
+    </div>
+    <table style="width:75%">
+      <tr>
+        <th>Skill Name</th>
+        <th>Skill ID</th>
+        <th>Created At</th>
+        <th>Last Updated</th>
+        <th>Skill Status</th>
+        <th></th>
+      </tr>
+      <% for (var i = 0; i < data.length; i++) { %>
+        <tr>
+          <td><%= data[i].name %></td>
+          <td><%= data[i].skillId %></td>
+          <td><%= data[i].created_date %></td>
+          <td><%= data[i].updated_date %></td>
+          <td>
+            <button type="button" onclick="checkStatus('<%= data[i].name %>', '<%= data[i].skillStatusLink %>')">Check Status</button>
+          </td>
+          <td id=<%= data[i].name %>></td>
+        </tr>
+      <% } %>
+
+    </table>
+  <script type="text/javascript">
+    let currentTime = new Date(Date.now());
+    let skills = <%-JSON.stringify(data)%>;
+    console.log(skills);
+
+    let access_token = <%-JSON.stringify(access_token)%>;
+    console.log(access_token);
+    function checkStatus(name, link) {
+      // document.getElementById(name).innerHTML = 'Success!';
+      let xhttp = new XMLHttpRequest({mozSystem: true});
+      xhttp.onreadystatechange = function() {
+        console.log('onclick function: ', this.body);
+        if (this.readyState == 4 && this.status == 200) {
+          document.getElementById(name).innerHTML = 'Success!';
+        }
+      };
+      xhttp.open("GET", "https://api.amazonalexa.com/" + link, true);
+      xhttp.setRequestHeader("Content-Type", "application/json");
+      xhttp.setRequestHeader('Authorization', access_token);
+      xhttp.send();
+    }
+
+  </script>
+  </body>
+  <footer>
+    <% include ../../partials/footer %>
+  </footer>
+</html>

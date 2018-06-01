@@ -13,6 +13,9 @@ module.exports = (app) => {
   app.route('/skills')
     .get(skills.index);
 
+  app.route('/skills/alexa')
+    .get(alexaSkills.index);
+
   app.route('/skills/alexa/new')
     .get(alexaSkills.create_get)
     .post(alexaSkills.create_post);
