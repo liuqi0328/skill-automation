@@ -10,7 +10,8 @@ const createAlexaSkill = require('./helpers/amazon/create-alexa-skill');
 const awsHelpers = require('./helpers/amazon/aws-helpers');
 const dbHelpers = require('./helpers/db-helper');
 
-const platformError = 'You need to choose a platform. Choose from: "alexa", "google", "cortana".';
+const platformError =
+  'You need to choose a platform. Choose from: "alexa", "google", "cortana".';
 let code;
 let access_token;
 
@@ -64,14 +65,13 @@ exports.create_post = async (req, res) => {
 
   // CREATE FILES FOR SKILL CREATION/UPDATE
   createAlexaSkill.createSkillFiles(data, skillDirectory, underscoreName);
-  console.log('authorization code: ', code);
 
-  // let accessToken = await createAlexaSkill.getAccessToken(code);
-  // access_token = accessToken.access_token;
+  console.log('authorization code: ', code);
   console.log('access token: ', access_token);
 
   await awsHelpers.deploy(data, skillDirectory, underscoreName);
-  let skillData = await createAlexaSkill.create(skillDirectory, underscoreName, access_token);
+  let skillData =
+    await createAlexaSkill.create(skillDirectory, underscoreName, access_token);
   console.log('await skill data: ', skillData);
 
   let dbData = {

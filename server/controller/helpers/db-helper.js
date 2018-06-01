@@ -8,7 +8,7 @@ exports.alexa_skill_to_db = async (data) => {
   let skillId = data.skillId;
   let skillStatusLink = data.skillStatusLink;
 
-  let skill = await AlexaSkill.findOne({name: skillName}, (data) => {
+  let skill = await AlexaSkill.findOne({name: skillName}, (err, data) => {
     console.log('getting data...');
     return data;
   });
@@ -25,7 +25,7 @@ exports.alexa_skill_to_db = async (data) => {
   } else {
     // return skill;
     dbData = await skill.update({skillStatusLink: skillStatusLink, platform: 'alexa', updated_date: Date.now()}).exec();
-    let updatedSkill = await AlexaSkill.findOne({name: skillName}, (data) => {
+    let updatedSkill = await AlexaSkill.findOne({name: skillName}, (err, data) => {
       console.log('getting updated data...');
       return data;
     });

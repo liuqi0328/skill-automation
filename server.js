@@ -1,5 +1,7 @@
 'use strict';
 
+require('dotenv').config();
+
 const express = require('express');
 const path = require('path');
 const port = process.env.PORT || 8080;
@@ -9,7 +11,7 @@ const mongoose = require('mongoose');
 let app = express();
 
 mongoose.Promise = global.Promise;
-mongoose.connect('mongodb://localhost/skillAutomationdb');
+mongoose.connect(process.env.DB_HOST);
 
 let db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));

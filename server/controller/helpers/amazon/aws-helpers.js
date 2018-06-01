@@ -7,10 +7,13 @@ const AlexaSkill = require('../../../models/alexa-skill-model');
 
 const bucketName = 'skill-automation';
 
-// AWS SETUP
+/**
+ * Set up AWS credential, and assign AlexaDeveloper role from the AWS account.
+ *
+ * @return {[type]}
+ */
 const awsSetup = () => {
   return new Promise((resolve, reject) => {
-    // SET AWS REGION
     AWS.config.update({
       region: 'us-east-1',
     });
@@ -31,7 +34,11 @@ const awsSetup = () => {
         console.log(err, err.stack);
         reject(err);
       } else {
-        let creds = new AWS.Credentials(data.Credentials.AccessKeyId, data.Credentials.SecretAccessKey, data.Credentials.SessionToken);
+        let creds = new AWS.Credentials(
+          data.Credentials.AccessKeyId,
+          data.Credentials.SecretAccessKey,
+          data.Credentials.SessionToken
+        );
         AWS.config.credentials = creds;
         resolve();
       }
@@ -48,13 +55,21 @@ const awsS3listbuckets = () => {
         console.log(err, err.stack); // an error occurred
         reject(err);
       } else {
-        console.log(data);           // successful response
+        console.log(data); // successful response
         resolve(data);
       }
     });
   });
 };
 
+/**
+ * Async operation to upload zip files to S3 under 'skill-automation' bucket.
+ * The file key is the timestamp of when the zip was created.
+ *
+ * @param  {string} skillDirectory Project directory for the skill in temp
+ *                                 folder
+ * @param  {string} underscoreName Skill name with underscores
+ */
 const addFileToS3 = async (skillDirectory, underscoreName) => {
   await awsSetup();
 
@@ -68,30 +83,6 @@ const addFileToS3 = async (skillDirectory, underscoreName) => {
   let fileName = new Date(Date.now());
   let fileKey = fileName.toISOString() + '.zip';
   console.log('s3 file key: ', fileKey);
-
-  // return new Promise((resolve, reject) => {
-  //   fs.readFile(file, (err, data) => {
-  //     if (err) {
-  //       console.log('read file for s3 err');
-  //       reject(err);
-  //     }
-  //     let s3 = new AWS.S3({
-  //       apiVersion: '2006-03-01',
-  //     });
-  //     s3.putObject({
-  //       Bucket: bucketName,
-  //       Key: fileKey,
-  //       Body: data,
-  //     }, (err, data) => {
-  //       if (err) {
-  //         console.log('s3 put object err: ', err);
-  //         reject(err);
-  //       }
-  //       console.log('s3 put object success: ', data);
-  //       resolve(data);
-  //     });
-  //   });
-  // });
 
   fs.readFile(file, (err, data) => {
     if (err) {
@@ -111,9 +102,11 @@ const addFileToS3 = async (skillDirectory, underscoreName) => {
 
       AlexaSkill.findOne({name: underscoreName}, (err, data) => {
         if (err) console.log('db find one err: ', err);
+        // ADD DELETE PREVIOUS VERSION
         data.update({s3Key: fileKey}, (err, data) => {
+          if (err) console.log('db s3 link update err: ', err);
           AlexaSkill.findOne({name: underscoreName}, (err, data) => {
-            if (err) console.log('db find one err2: ', err);
+            if (err) console.log('db find one after update err: ', err);
             console.log('updated data: ', data);
           });
         });
@@ -123,8 +116,14 @@ const addFileToS3 = async (skillDirectory, underscoreName) => {
 };
 
 /**
- * DEPLOY ZIP FILE IN TEMP DIRECTORY TO AWS LAMBDA OR UPDATE AN EXISTING
- * FUNCTION
+ * Deploy index.zip file to AWS Lambda. It will check to see if the function
+ * exists, and create a new function or update an exising function with the
+ * zip file in the submission folder within the project folder of the skill.
+ *
+ * @param  {string} skillDirectory Project directory for the skill in temp
+ *                                 folder
+ * @param  {string} underscoreName Skill name with underscores
+ * @return {[type]}                Response from AWS server
  */
 const deployToAWSLambda = (skillDirectory, underscoreName) => {
   let lambda = new AWS.Lambda();
@@ -141,7 +140,8 @@ const deployToAWSLambda = (skillDirectory, underscoreName) => {
 
         params = {
           Code: {
-            ZipFile: fs.readFileSync(`${skillDirectory}/project/submission/index.zip`),
+            ZipFile:
+              fs.readFileSync(`${skillDirectory}/project/submission/index.zip`),
           },
           FunctionName: underscoreName,
           Handler: 'index.handler',
@@ -164,7 +164,8 @@ const deployToAWSLambda = (skillDirectory, underscoreName) => {
 
         params = {
           FunctionName: underscoreName,
-          ZipFile: fs.readFileSync(`${skillDirectory}/project/submission/index.zip`),
+          ZipFile:
+            fs.readFileSync(`${skillDirectory}/project/submission/index.zip`),
         };
 
         lambda.updateFunctionCode(params, (err, data) => {
@@ -181,6 +182,16 @@ const deployToAWSLambda = (skillDirectory, underscoreName) => {
   });
 };
 
+/**
+ * Add Alexa Skills Kit trigger to the Lambda function.
+ *
+ * @param {object} lambda         AWS.Lambda instance
+ * @param {string} underscoreName Skill name with underscores
+ * @param {[type]} resolve        return Promise for deployToAWSLambda
+ *                                function
+ * @param {[type]} reject         return Promise for deployToAWSLambda
+ *                                function
+ */
 function addPermissionToLambda(lambda, underscoreName, resolve, reject) {
   let permissionsParams = {
     Action: 'lambda:InvokeFunction', /* required */
@@ -193,12 +204,21 @@ function addPermissionToLambda(lambda, underscoreName, resolve, reject) {
       console.log(err, err.stack); // an error occurred
       reject(err);
     } else {
-      console.log('add permission: ', data);           // successful response
+      console.log('add permission: ', data); // successful response
       resolve(data);
     }
   });
 }
 
+/**
+ * Deploy zip file to AWS Lambda
+ *
+ * @param  {[type]} data           [description]
+ * @param  {string} skillDirectory Project directory for the skill in temp
+ *                                 folder
+ * @param  {string} underscoreName Skill name with underscores
+ * @return {[type]}                Response from deploying zip file to Lambda
+ */
 const deploy = (data, skillDirectory, underscoreName) => {
   console.log('deploying to AWS started...');
 

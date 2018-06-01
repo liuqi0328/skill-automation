@@ -1,11 +1,13 @@
 'use strict';
 
+require('dotenv').config();
+
 const fs = require('fs');
 const exec = require('child_process').execSync;
 const rp = require('request-promise');
 
 const alexaBaseUrl = 'https://api.amazonalexa.com';
-const vendorId = 'M2LCJQMQ8K0T24';
+const vendorId = process.env.VENDOR_ID;
 
 let createSkillFiles = (data, skillDirectory, underscoreName) => {
   console.log('build started...!');
