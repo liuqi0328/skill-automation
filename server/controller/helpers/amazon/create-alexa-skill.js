@@ -321,9 +321,9 @@ exports.handler = skillBuilder
 
   // NPM BUILD
   if (!fs.existsSync(`${skillDirectory}/project/submission`)) {
-    exec(`cd ${skillDirectory}/project && npm i && mkdir submission && zip -X -r submission/index.zip * -x build build/* *.xlsx Skills Skills/* test test/* speechAssets speechAssets/* index.zip deploy.sh > /dev/null`);
+    exec(`cd ${skillDirectory}/project && npm i && mkdir submission && zip -X -r submission/index.zip * -x build build/* *.xlsx Skills Skills/* test test/* speechAssets speechAssets/* index.zip s3.zip deploy.sh > /dev/null`);
   } else {
-    exec(`cd ${skillDirectory}/project && npm i && zip -X -r submission/index.zip * -x build build/* *.xlsx Skills Skills/* test test/* speechAssets speechAssets/* index.zip deploy.sh > /dev/null`);
+    exec(`cd ${skillDirectory}/project && npm i && zip -X -r submission/index.zip * -x build build/* *.xlsx Skills Skills/* test test/* speechAssets speechAssets/* index.zip s3.zip deploy.sh > /dev/null`);
   }
 
   console.log('build finished...!');

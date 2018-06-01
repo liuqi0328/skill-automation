@@ -31,6 +31,9 @@ let AlexaSkillSchema = new Schema({
     type: String,
     default: 'alexa',
   },
+  s3Key: {
+    type: String,
+  },
 });
 
 module.exports = mongoose.model('AlexaSkill', AlexaSkillSchema);

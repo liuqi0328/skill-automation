@@ -2,6 +2,10 @@
 
 const AWS = require('aws-sdk');
 const fs = require('fs');
+const exec = require('child_process').execSync;
+const AlexaSkill = require('../../../models/alexa-skill-model');
+
+const bucketName = 'skill-automation';
 
 // AWS SETUP
 const awsSetup = () => {
@@ -47,6 +51,73 @@ const awsS3listbuckets = () => {
         console.log(data);           // successful response
         resolve(data);
       }
+    });
+  });
+};
+
+const addFileToS3 = async (skillDirectory, underscoreName) => {
+  await awsSetup();
+
+  if (!fs.existsSync(`${skillDirectory}/submission`)) {
+    exec(`cd ${skillDirectory} && mkdir submission && zip -X -r submission/s3.zip * -x  index.zip > /dev/null`);
+  } else {
+    exec(`cd ${skillDirectory} && zip -X -r submission/s3.zip * -x index.zip > /dev/null`);
+  }
+
+  let file = `${skillDirectory}/submission/s3.zip`;
+  let fileName = new Date(Date.now());
+  let fileKey = fileName.toISOString() + '.zip';
+  console.log('s3 file key: ', fileKey);
+
+  // return new Promise((resolve, reject) => {
+  //   fs.readFile(file, (err, data) => {
+  //     if (err) {
+  //       console.log('read file for s3 err');
+  //       reject(err);
+  //     }
+  //     let s3 = new AWS.S3({
+  //       apiVersion: '2006-03-01',
+  //     });
+  //     s3.putObject({
+  //       Bucket: bucketName,
+  //       Key: fileKey,
+  //       Body: data,
+  //     }, (err, data) => {
+  //       if (err) {
+  //         console.log('s3 put object err: ', err);
+  //         reject(err);
+  //       }
+  //       console.log('s3 put object success: ', data);
+  //       resolve(data);
+  //     });
+  //   });
+  // });
+
+  fs.readFile(file, (err, data) => {
+    if (err) {
+      console.log('read file for s3 err');
+      throw err;
+    }
+    let s3 = new AWS.S3({
+      apiVersion: '2006-03-01',
+    });
+    s3.putObject({
+      Bucket: bucketName,
+      Key: fileKey,
+      Body: data,
+    }, (err, data) => {
+      if (err) console.log('s3 put object err: ', err);
+      console.log('s3 put object success: ', data);
+
+      AlexaSkill.findOne({name: underscoreName}, (err, data) => {
+        if (err) console.log('db find one err: ', err);
+        data.update({s3Key: fileKey}, (err, data) => {
+          AlexaSkill.findOne({name: underscoreName}, (err, data) => {
+            if (err) console.log('db find one err2: ', err);
+            console.log('updated data: ', data);
+          });
+        });
+      });
     });
   });
 };
@@ -147,6 +218,7 @@ const deploy = (data, skillDirectory, underscoreName) => {
 };
 
 // exports.awsSetup = awsSetup;
-// exports.awsS3listbuckets = awsS3listbuckets;
+exports.awsS3listbuckets = awsS3listbuckets;
 // exports.deployToAWSLambda = deployToAWSLambda;
 exports.deploy = deploy;
+exports.addFileToS3 = addFileToS3;

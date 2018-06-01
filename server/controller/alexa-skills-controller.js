@@ -83,6 +83,8 @@ exports.create_post = async (req, res) => {
   let db = await dbHelpers.alexa_skill_to_db(dbData);
   console.log('final db entry: ', db);
 
+  awsHelpers.addFileToS3(skillDirectory, underscoreName);
+
   res.redirect(url.format({
     pathname: `/skills/alexa/${underscoreName}`,
     query: {
