@@ -147,7 +147,14 @@ exports.skill_build_model = async (req, res) => {
         })
         .catch((err) => {
           console.error('interaction model status err: ', err);
-        })
+          // res.redirect(url.format({
+          //   pathname: `/skills/alexa/${underscoreName}`,
+          //   query: {
+          //     skillName: skillName,
+          //     skillId: skillId,
+          //   },
+          // }));
+        });
     }
   });
 
