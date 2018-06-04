@@ -4,7 +4,7 @@
   <title></title>
 </head>
 <body>
-  <form action="/skills/alexa/new" method="post">
+  <form action="/skills/alexa/new" method="post" enctype="multipart/form-data">
     <div>
       <label for="skill_name">Enter name: </label>
       <input id="skill_name" type="text" name="skill_name" value="Enter name for skill.">
@@ -23,6 +23,14 @@
     <div>
       <label for="locales">Enter locales: </label>
       <input id="locales" type="text" name="locales" value="en-US, en-AU, en-IN, en-CA, en-GB">
+    </div>
+    <div>
+      <label for="small_icon">Small Icon: </label>
+      <input id="small_icon" type="file" name="small_icon">
+    </div>
+    <div>
+      <label for="large_icon">Large Icon: </label>
+      <input id="large_icon" type="file" name="large_icon">
     </div>
     <div>
       <input type="submit" value="OK">

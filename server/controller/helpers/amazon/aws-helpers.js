@@ -62,6 +62,60 @@ const awsS3listbuckets = () => {
   });
 };
 
+const uploadIconToS3 = async (filepath, underscoreName, imgSize) => {
+  await awsSetup();
+  let buckets = await awsS3listbuckets();
+
+  let bucketName = underscoreName.replace(/_/g, '-');
+  let bucket = buckets.Buckets.find((bucket) => {
+    return bucket.name == bucketName;
+  });
+
+  console.log('first bucket call: ', bucket);
+
+  let s3 = new AWS.S3({apiVersion: '2006-03-01'});
+
+  if (!bucket) {
+    let params = {Bucket: bucketName};
+    bucket = await s3.createBucket(params, function(err, data) {
+      if (err) {
+        console.log(err, err.stack);
+      } else {
+        console.log(data);
+        return data;
+      }
+    });
+  }
+  console.log('s3 bucket for icon: ', bucket);
+
+  let icon = fs.createReadStream(filepath);
+  let resp = await s3.putObject({
+    Bucket: bucketName,
+    Key: `assets/images/${imgSize}/${underscoreName}${imgSize}.png`,
+    Body: icon,
+  }, (err, data) => {
+    if (err) {
+      console.error('upload icon err: ', err);
+      return err;
+    }
+    console.log('upload icon success: ', data);
+    return data;
+  });
+  return resp;
+
+  // await fs.readFile(file, (err, data) => {
+  //   if (err) {
+  //     console.log('read file for s3 err');
+  //     throw err;
+  //   }
+  //   await s3.putObject({
+  //     Bucket: bucketName,
+  //     Key: `/assets/images/${imgSize}/${underscoreName}${imgSize}`,
+  //     Body: data,
+  //   }, (err, data) => {});
+  // });
+};
+
 /**
  * Async operation to upload zip files to S3 under 'skill-automation' bucket.
  * The file key is the timestamp of when the zip was created.
@@ -239,6 +293,6 @@ const deploy = (data, skillDirectory, underscoreName) => {
 
 // exports.awsSetup = awsSetup;
 exports.awsS3listbuckets = awsS3listbuckets;
-// exports.deployToAWSLambda = deployToAWSLambda;
+exports.uploadIconToS3 = uploadIconToS3;
 exports.deploy = deploy;
 exports.addFileToS3 = addFileToS3;

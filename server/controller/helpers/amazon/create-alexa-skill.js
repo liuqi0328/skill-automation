@@ -520,7 +520,7 @@ let checkManifestStatus = (url, access_token) => {
     })
     .catch((err) => {
       console.log('manifest status check err: ', err);
-      return 'err';
+      return err;
     });
 };
 
