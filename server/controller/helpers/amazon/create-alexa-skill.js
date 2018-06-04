@@ -458,14 +458,14 @@ let checkExistingSkill = (underscoreName, access_token) => {
     });
 };
 
-let updateInteractionModel = async (skillDirectory, skillId, locale, access_token) => {
-  let allLocales = ['en-US', 'en-AU', 'en-GB', 'en-IN', 'en-CA'];
-  if (!allLocales.includes(locale)) {
-    console.log('Incorrect locale...');
-    return 'locale error';
-  }
+let updateInteractionModel = async (interactionModelDirectory, skillId, locale, access_token) => {
+  // let allLocales = ['en-US', 'en-AU', 'en-GB', 'en-IN', 'en-CA'];
+  // if (!allLocales.includes(locale)) {
+  //   console.log('Incorrect locale...');
+  //   return 'locale error';
+  // }
   let interactionModel =
-    JSON.parse(fs.readFileSync(`${skillDirectory}/models/${locale}.json`, 'utf8'));
+    JSON.parse(fs.readFileSync(`${interactionModelDirectory}/${locale}.json`, 'utf8'));
   let updateInteractionModelOptions = {
     method: 'PUT',
     uri: alexaBaseUrl +

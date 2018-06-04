@@ -23,6 +23,9 @@ module.exports = (app) => {
   app.route('/skills/alexa/:skillName')
     .get(alexaSkills.skill_get);
 
+  app.route('/skills/alexa/:skillName/interaction_model')
+    .get(alexaSkills.skill_build_model);
+
   // app.route('/skills/google/new')
   //   .get(googleActions.create_get)
   //   .post(googleActions.create_post);

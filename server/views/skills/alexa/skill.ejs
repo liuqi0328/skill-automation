@@ -7,7 +7,11 @@
     <h1><%= skillName %></h1>
     <p>Skill ID: <%= skillId %></p>
     <p id="skill-status">Skill Uploading...</p>
-    <a href="/skills" id="interaction-model" type="hidden">Build Interaction Model</a>
+
+    <form action="/skills/alexa/<%= skillName %>/interaction_model" method="get" id="interaction-model">
+      <input id="skillId" type="hidden" name="skillId" value="<%= skillId %>">
+      <input type="submit" value="Build Interaction Model"/>
+    </form>
     <br/>
     <a href="/skills">Back to Main Menu</a>
   <script type="text/javascript">

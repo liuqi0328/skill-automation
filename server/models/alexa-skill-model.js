@@ -16,8 +16,7 @@ let AlexaSkillSchema = new Schema({
     type: String,
   },
   interactionModelStatusLink: {
-    type: Map,
-    of: String,
+    type: String,
   },
   created_date: {
     type: Date,
@@ -33,6 +32,13 @@ let AlexaSkillSchema = new Schema({
   },
   s3Key: {
     type: String,
+  },
+  skill_manifest_updated: {
+    type: Date,
+  },
+  interaction_model_updated: {
+    type: Map,
+    of: String,
   },
 });
 
