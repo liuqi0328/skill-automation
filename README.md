@@ -10,7 +10,7 @@ Use dotenv to pass in environment variables to run locally:
 Create `.env` file in the root directory of the project.
 
 ```
-# .env file
+// .env file
 VENDOR_ID=M2LCJQMQ8K0T24
 DB_HOST=mongodb://localhost/skillAutomationdb
 ```
