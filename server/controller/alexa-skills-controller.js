@@ -39,7 +39,7 @@ exports.index = async (req, res) => {
   console.log('skill index access token: ', access_token);
 
   let skills = await dbHelpers.get_all_alexa_skills();
-  console.log('final skills list: ', skills);
+  // console.log('final skills list: ', skills);
   res.render('skills/alexa/index', {data: skills, access_token: access_token});
 };
 
@@ -118,9 +118,10 @@ exports.create_post = async (req, res) => {
           let underscoreName = skillName.replace(/\ /g, '_');
           let skillDirectory = filepath + '/' + underscoreName;
 
-          let smallIcon = await awsHelpers.uploadIconToS3(newpath, underscoreName, 108);
-          let largeIcon = await awsHelpers.uploadIconToS3(largenewpath, underscoreName, 512);
-          console.log(smallIcon, largeIcon);
+          let icons = await awsHelpers.uploadIconToS3(newpath, largenewpath, underscoreName);
+
+          console.log('icon........ ', icons);
+          console.log('end..............!!!!!');
 
           if (!fs.existsSync(filepath)) fs.mkdirSync(filepath);
           if (!fs.existsSync(skillDirectory)) fs.mkdirSync(skillDirectory);
@@ -136,10 +137,13 @@ exports.create_post = async (req, res) => {
             await createAlexaSkill.create(skillDirectory, underscoreName, access_token);
           console.log('await skill data: ', skillData);
 
+          let bucketName = underscoreName.replace(/_/g, '-');
           let dbData = {
             skillName: underscoreName,
             skillId: skillData.skillId,
             skillStatusLink: skillData.statusLink,
+            smallIconLink: `https://s3.amazonaws.com/${bucketName}/assets/images/108/${underscoreName}108.png`,
+            largeIconLink: `https://s3.amazonaws.com/${bucketName}/assets/images/512/${underscoreName}512.png`,
           };
           console.log('final db data: ', dbData);
           let db = await dbHelpers.alexa_skill_to_db(dbData);

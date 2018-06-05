@@ -55,20 +55,20 @@ const awsS3listbuckets = () => {
         console.log(err, err.stack); // an error occurred
         reject(err);
       } else {
-        console.log(data); // successful response
+        // console.log(data); // successful response
         resolve(data);
       }
     });
   });
 };
 
-const uploadIconToS3 = async (filepath, underscoreName, imgSize) => {
+const uploadIconToS3 = async (smallfilepath, largefilepath, underscoreName) => {
   await awsSetup();
   let buckets = await awsS3listbuckets();
 
-  let bucketName = underscoreName.replace(/_/g, '-');
+  let skillBucketName = underscoreName.replace(/_/g, '-');
   let bucket = buckets.Buckets.find((bucket) => {
-    return bucket.name == bucketName;
+    return bucket.name == skillBucketName;
   });
 
   console.log('first bucket call: ', bucket);
@@ -76,44 +76,42 @@ const uploadIconToS3 = async (filepath, underscoreName, imgSize) => {
   let s3 = new AWS.S3({apiVersion: '2006-03-01'});
 
   if (!bucket) {
-    let params = {Bucket: bucketName};
-    bucket = await s3.createBucket(params, function(err, data) {
-      if (err) {
-        console.log(err, err.stack);
-      } else {
-        console.log(data);
-        return data;
-      }
+    let params = {Bucket: skillBucketName};
+    return new Promise((resolve, reject) => {
+      s3.createBucket(params, async function(err, data) {
+        if (err) {
+          console.log(err, err.stack);
+          reject(err);
+        } else {
+          console.log('bucket created!');
+          console.log('upload icon after bucket');
+
+          let small = await putObject(smallfilepath,
+                                      underscoreName,
+                                      skillBucketName,
+                                      108);
+          let large = await putObject(largefilepath,
+                                      underscoreName,
+                                      skillBucketName,
+                                      512);
+          resolve(small, large);
+        }
+      });
     });
+  } else {
+    console.log('upload icon');
+
+    let small = await putObject(smallfilepath,
+                                underscoreName,
+                                skillBucketName,
+                                108);
+    let large = await putObject(largefilepath,
+                                underscoreName,
+                                skillBucketName,
+                                512);
+
+    return [small, large];
   }
-  console.log('s3 bucket for icon: ', bucket);
-
-  let icon = fs.createReadStream(filepath);
-  let resp = await s3.putObject({
-    Bucket: bucketName,
-    Key: `assets/images/${imgSize}/${underscoreName}${imgSize}.png`,
-    Body: icon,
-  }, (err, data) => {
-    if (err) {
-      console.error('upload icon err: ', err);
-      return err;
-    }
-    console.log('upload icon success: ', data);
-    return data;
-  });
-  return resp;
-
-  // await fs.readFile(file, (err, data) => {
-  //   if (err) {
-  //     console.log('read file for s3 err');
-  //     throw err;
-  //   }
-  //   await s3.putObject({
-  //     Bucket: bucketName,
-  //     Key: `/assets/images/${imgSize}/${underscoreName}${imgSize}`,
-  //     Body: data,
-  //   }, (err, data) => {});
-  // });
 };
 
 /**
@@ -296,3 +294,23 @@ exports.awsS3listbuckets = awsS3listbuckets;
 exports.uploadIconToS3 = uploadIconToS3;
 exports.deploy = deploy;
 exports.addFileToS3 = addFileToS3;
+
+let putObject = (filepath, underscoreName, bucketName, imgSize) => {
+  let s3 = new AWS.S3({apiVersion: '2006-03-01'});
+  let icon = fs.createReadStream(filepath);
+  return new Promise((resolve, reject) => {
+    s3.putObject({
+      Bucket: bucketName,
+      Key: `assets/images/${imgSize}/${underscoreName}${imgSize}.png`,
+      ACL: 'public-read',
+      Body: icon,
+    }, (err, data) => {
+      if (err) {
+        console.error('upload icon err: ', err);
+        reject(err);
+      }
+      console.log('upload icon success: ', data);
+      resolve(data);
+    });
+  });
+};

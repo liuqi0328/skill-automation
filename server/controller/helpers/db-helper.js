@@ -39,7 +39,7 @@ exports.alexa_skill_to_db = async (data) => {
 
 exports.get_all_alexa_skills = async () => {
   let skills = await AlexaSkill.find();
-  console.log('skill index: ', skills);
+  // console.log('skill index: ', skills);
   return skills;
 };
 

@@ -40,6 +40,12 @@ let AlexaSkillSchema = new Schema({
     type: Map,
     of: String,
   },
+  smallIconLink: {
+    type: String,
+  },
+  largeIconLink: {
+    type: String,
+  },
 });
 
 module.exports = mongoose.model('AlexaSkill', AlexaSkillSchema);

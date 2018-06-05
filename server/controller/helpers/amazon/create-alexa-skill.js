@@ -108,9 +108,9 @@ let createSkillFiles = (data, skillDirectory, underscoreName) => {
     `Alexa, open ${skillName}.`,
   ];
   const category = 'SMART_HOME'; // CHANGE CATEGORY
-  const imageName = underscoreName.replace(/_/g, '-');
-  const smallIconSrc = `https://s3.amazonaws.com/${imageName}/assets/images/108/${imageName}108.png`; // UPDATE SKILL ICON LINKS
-  const largeIconSrc = `https://s3.amazonaws.com/${imageName}/assets/images/512/${imageName}512.png`; // UPDATE SKILL ICON LINKS
+  const bucketName = underscoreName.replace(/_/g, '-');
+  const smallIconSrc = `https://s3.amazonaws.com/${bucketName}/assets/images/108/${underscoreName}108.png`; // UPDATE SKILL ICON LINKS
+  const largeIconSrc = `https://s3.amazonaws.com/${bucketName}/assets/images/512/${underscoreName}512.png`; // UPDATE SKILL ICON LINKS
   const privacyPolicyUrl = 'https://www.freshdigitalgroup.com/privacy-policy-for-bots';
   const termsOfUseUrl = 'https://www.freshdigitalgroup.com/voice-applications-amazon-terms-of-use';
 
