@@ -1,5 +1,8 @@
 # Skill Automation API
 
+### Install [MongoDB](https://www.mongodb.com) locally
+
+
 ### Environment Variables
 - Vendor ID as VENDOR_ID
 - DB as DB_HOST
