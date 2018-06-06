@@ -4,8 +4,8 @@ module.exports = (app) => {
   let home = require('../controller/home-controller');
   let skills = require('../controller/skills-controller');
   let alexaSkills = require('../controller/alexa-skills-controller');
-  let googleActions = require('../controller/google-actions-controller');
-  let cortanaSkills = require('../controller/cortana-skills-controller');
+  // let googleActions = require('../controller/google-actions-controller');
+  // let cortanaSkills = require('../controller/cortana-skills-controller');
 
   app.route('/')
     .get(home.index);

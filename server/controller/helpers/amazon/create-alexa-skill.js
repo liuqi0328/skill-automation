@@ -268,12 +268,12 @@ let createSkillFiles = (data, skillDirectory, underscoreName) => {
 const Alexa = require('ask-sdk');
 const unhandledMessage = 'I couldn\\'t understand what you said, please say it again.';
 `
-  for (let i = 0; i < intents.length; i_++) {
+  for (let i = 0; i < intents.length; i++) {
     let intent = intents[i];
     if (i < intents.length - 1) {
       handlerString += `${intent.name}, `;
     } else {
-      handlerSting += `${intent.name}`;
+      handlerString += `${intent.name}`;
     }
 
     // PARSE INTENT INPUT TO INCLUDE SPEECH AND REPROMPT SPEECH

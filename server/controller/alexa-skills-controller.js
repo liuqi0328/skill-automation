@@ -78,89 +78,159 @@ exports.create_post = async (req, res) => {
 
   console.log('---------------------------------');
   let form = new formidable.IncomingForm();
-  form.parse(req, (err, fields, files) => {
+  form.parse(req, async (err, fields, files) => {
     console.log('fields: ', fields);
     console.log('files: ', files);
+
     let oldpath = files.small_icon.path;
     let newpath = iconTempDirectory + '/' + files.small_icon.name;
-    fs.rename(oldpath, newpath, (err) => {
-      if (err) {
-        console.error('small icon file write err: ', err);
-        res.redirect('/skills/alexa');
-      } else {
-        console.log('small icon file write success!');
+    fs.renameSync(oldpath, newpath);
+    console.log('small icon saved to temp...!');
 
-        let largeoldpath = files.large_icon.path;
-        let largenewpath = iconTempDirectory + '/' + files.large_icon.name;
+    let largeoldpath = files.large_icon.path;
+    let largenewpath = iconTempDirectory + '/' + files.large_icon.name;
+    fs.renameSync(largeoldpath, largenewpath);
+    console.log('large icon saved to temp...!');
 
-        fs.rename(largeoldpath, largenewpath, async (err) => {
-          if (err) {
-            console.error('large icon file write err: ', err);
-          } else {
-            console.log('large icon file write success!');
-          }
+    let data = fields;
+    // let platform = data.platform;
+    let skillName = data.skill_name;
+    // BUILD LOCALES
+    let inputLocales = data.locales;
+    let seperator = /\s*,\s*/;
+    let arrayOfLocales = [];
+    if (inputLocales) {
+      arrayOfLocales = inputLocales.split(seperator);
+    } else {
+      arrayOfLocales.push('en-US');
+    }
+    data.locales = arrayOfLocales;
 
-          let data = fields;
-          // let platform = data.platform;
-          let skillName = data.skill_name;
-          // BUILD LOCALES
-          let inputLocales = data.locales;
-          let seperator = /\s*,\s*/;
-          let arrayOfLocales = [];
-          if (inputLocales) {
-            arrayOfLocales = inputLocales.split(seperator);
-          } else {
-            arrayOfLocales.push('en-US');
-          }
-          data.locales = arrayOfLocales;
+    // CREATE TEMP DIRECTORY FOR SOURCE CODE
+    let underscoreName = skillName.replace(/\ /g, '_');
+    let skillDirectory = filepath + '/' + underscoreName;
 
-          // CREATE TEMP DIRECTORY FOR SOURCE CODE
-          let underscoreName = skillName.replace(/\ /g, '_');
-          let skillDirectory = filepath + '/' + underscoreName;
+    let icons = await awsHelpers.uploadIconToS3(newpath,
+                                                largenewpath,
+                                                underscoreName);
 
-          let icons = await awsHelpers.uploadIconToS3(newpath,
-                                                      largenewpath,
-                                                      underscoreName);
+    console.log('icon........ ', icons);
+    console.log('end..............!!!!!');
 
-          console.log('icon........ ', icons);
-          console.log('end..............!!!!!');
+    if (!fs.existsSync(filepath)) fs.mkdirSync(filepath);
+    if (!fs.existsSync(skillDirectory)) fs.mkdirSync(skillDirectory);
 
-          if (!fs.existsSync(filepath)) fs.mkdirSync(filepath);
-          if (!fs.existsSync(skillDirectory)) fs.mkdirSync(skillDirectory);
+    // CREATE FILES FOR SKILL CREATION/UPDATE
+    createAlexaSkill.createSkillFiles(data,
+                                      skillDirectory,
+                                      underscoreName);
 
-          // CREATE FILES FOR SKILL CREATION/UPDATE
-          createAlexaSkill.createSkillFiles(data,
-                                            skillDirectory,
-                                            underscoreName);
+    console.log('authorization code: ', code);
+    console.log('access token: ', access_token);
 
-          console.log('authorization code: ', code);
-          console.log('access token: ', access_token);
+    await awsHelpers.deploy(data, skillDirectory, underscoreName);
+    let skillData = await createAlexaSkill.create(skillDirectory,
+                                                  underscoreName,
+                                                  access_token);
+    console.log('await skill data: ', skillData);
 
-          await awsHelpers.deploy(data, skillDirectory, underscoreName);
-          let skillData = await createAlexaSkill.create(skillDirectory,
-                                                        underscoreName,
-                                                        access_token);
-          console.log('await skill data: ', skillData);
+    let bucketName = underscoreName.replace(/_/g, '-');
+    let dbData = {
+      skillName: underscoreName,
+      skillId: skillData.skillId,
+      skillStatusLink: skillData.statusLink,
+      smallIconLink: `https://s3.amazonaws.com/${bucketName}/assets/images/108/${underscoreName}108.png`,
+      largeIconLink: `https://s3.amazonaws.com/${bucketName}/assets/images/512/${underscoreName}512.png`,
+    };
+    console.log('final db data: ', dbData);
+    let db = await dbHelpers.alexa_skill_to_db(dbData);
+    console.log('final db entry: ', db);
 
-          let bucketName = underscoreName.replace(/_/g, '-');
-          let dbData = {
-            skillName: underscoreName,
-            skillId: skillData.skillId,
-            skillStatusLink: skillData.statusLink,
-            smallIconLink: `https://s3.amazonaws.com/${bucketName}/assets/images/108/${underscoreName}108.png`,
-            largeIconLink: `https://s3.amazonaws.com/${bucketName}/assets/images/512/${underscoreName}512.png`,
-          };
-          console.log('final db data: ', dbData);
-          let db = await dbHelpers.alexa_skill_to_db(dbData);
-          console.log('final db entry: ', db);
+    awsHelpers.addFileToS3(skillDirectory, underscoreName);
 
-          awsHelpers.addFileToS3(skillDirectory, underscoreName);
-
-          res.redirect('/skills/alexa');
-        });
-      }
-    });
+    res.redirect('/skills/alexa');
   });
+
+
+  // =========================================================================
+  //   fs.rename(oldpath, newpath, (err) => {
+  //     if (err) {
+  //       console.error('small icon file write err: ', err);
+  //       res.redirect('/skills/alexa');
+  //     } else {
+  //       console.log('small icon file write success!');
+
+  //       let largeoldpath = files.large_icon.path;
+  //       let largenewpath = iconTempDirectory + '/' + files.large_icon.name;
+
+  //       fs.rename(largeoldpath, largenewpath, async (err) => {
+  //         if (err) {
+  //           console.error('large icon file write err: ', err);
+  //         } else {
+  //           console.log('large icon file write success!');
+  //         }
+
+  //         let data = fields;
+  //         // let platform = data.platform;
+  //         let skillName = data.skill_name;
+  //         // BUILD LOCALES
+  //         let inputLocales = data.locales;
+  //         let seperator = /\s*,\s*/;
+  //         let arrayOfLocales = [];
+  //         if (inputLocales) {
+  //           arrayOfLocales = inputLocales.split(seperator);
+  //         } else {
+  //           arrayOfLocales.push('en-US');
+  //         }
+  //         data.locales = arrayOfLocales;
+
+  //         // CREATE TEMP DIRECTORY FOR SOURCE CODE
+  //         let underscoreName = skillName.replace(/\ /g, '_');
+  //         let skillDirectory = filepath + '/' + underscoreName;
+
+  //         let icons = await awsHelpers.uploadIconToS3(newpath,
+  //                                                     largenewpath,
+  //                                                     underscoreName);
+
+  //         console.log('icon........ ', icons);
+  //         console.log('end..............!!!!!');
+
+  //         if (!fs.existsSync(filepath)) fs.mkdirSync(filepath);
+  //         if (!fs.existsSync(skillDirectory)) fs.mkdirSync(skillDirectory);
+
+  //         // CREATE FILES FOR SKILL CREATION/UPDATE
+  //         createAlexaSkill.createSkillFiles(data,
+  //                                           skillDirectory,
+  //                                           underscoreName);
+
+  //         console.log('authorization code: ', code);
+  //         console.log('access token: ', access_token);
+
+  //         await awsHelpers.deploy(data, skillDirectory, underscoreName);
+  //         let skillData = await createAlexaSkill.create(skillDirectory,
+  //                                                       underscoreName,
+  //                                                       access_token);
+  //         console.log('await skill data: ', skillData);
+
+  //         let bucketName = underscoreName.replace(/_/g, '-');
+  //         let dbData = {
+  //           skillName: underscoreName,
+  //           skillId: skillData.skillId,
+  //           skillStatusLink: skillData.statusLink,
+  //           smallIconLink: `https://s3.amazonaws.com/${bucketName}/assets/images/108/${underscoreName}108.png`,
+  //           largeIconLink: `https://s3.amazonaws.com/${bucketName}/assets/images/512/${underscoreName}512.png`,
+  //         };
+  //         console.log('final db data: ', dbData);
+  //         let db = await dbHelpers.alexa_skill_to_db(dbData);
+  //         console.log('final db entry: ', db);
+
+  //         awsHelpers.addFileToS3(skillDirectory, underscoreName);
+
+  //         res.redirect('/skills/alexa');
+  //       });
+  //     }
+  //   });
+  // });
 
 
   // ==========================================================================
@@ -257,4 +327,3 @@ exports.skill_build_model = async (req, res) => {
 
   res.redirect('/skills/alexa');
 };
-
