@@ -61,6 +61,9 @@ exports.create_post = async (req, res) => {
     console.log('fields: ', fields);
     console.log('files: ', files);
 
+    /**
+     * Move uploaded small and large icons to temp directory
+     */
     let oldpath = files.small_icon.path;
     let newpath = iconTempDirectory + '/' + files.small_icon.name;
     fs.renameSync(oldpath, newpath);
@@ -72,7 +75,6 @@ exports.create_post = async (req, res) => {
     console.log('large icon saved to temp...!');
 
     let data = fields;
-    // let platform = data.platform;
     let skillName = data.skill_name;
     // BUILD LOCALES
     let inputLocales = data.locales;
@@ -89,20 +91,13 @@ exports.create_post = async (req, res) => {
     let underscoreName = skillName.replace(/\ /g, '_');
     let skillDirectory = filepath + '/' + underscoreName;
 
-    let icons = await awsHelpers.uploadIconToS3(newpath,
-                                                largenewpath,
-                                                underscoreName);
-
-    console.log('icon........ ', icons);
-    console.log('end..............!!!!!');
+    await awsHelpers.uploadIconToS3(newpath, largenewpath, underscoreName);
 
     if (!fs.existsSync(filepath)) fs.mkdirSync(filepath);
     if (!fs.existsSync(skillDirectory)) fs.mkdirSync(skillDirectory);
 
     // CREATE FILES FOR SKILL CREATION/UPDATE
-    createAlexaSkill.createSkillFiles(data,
-                                      skillDirectory,
-                                      underscoreName);
+    createAlexaSkill.createSkillFiles(data, skillDirectory, underscoreName);
 
     console.log('authorization code: ', code);
     console.log('access token: ', accessToken);
