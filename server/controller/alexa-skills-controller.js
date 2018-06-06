@@ -141,7 +141,7 @@ exports.skill_get = async (req, res) => {
   let result = await createAlexaSkill.checkManifestStatus(manifestStatusLink,
                                                           access_token);
   let status = result.manifest.lastUpdateRequest.status;
-  if (status === 'err') res.redirect('/skills/alexa');
+  if (status !== 'SUCCEEDED') res.redirect('/skills/alexa');
   if (status === 'SUCCEEDED') {
     let updateAttr = {skill_manifest_updated: Date.now()};
     let updatedSkill = await dbHelpers.update_one_alexa_skill(skillId,
@@ -153,7 +153,7 @@ exports.skill_get = async (req, res) => {
              {skillName: skillName, skillId: skillId, status: status});
 };
 
-exports.skill_build_model = async (req, res) => {
+exports.skill_build_interaction_model = async (req, res) => {
   console.log('skill build interaction model');
   console.log('req query: ', req.query);
   let skillId = req.query.skillId;
@@ -162,36 +162,28 @@ exports.skill_build_model = async (req, res) => {
   let underscoreName = skillName.replace(/\ /g, '_');
   let interactionModelDirectory = `${filepath}/${underscoreName}/models`;
 
-  fs.readdir(interactionModelDirectory, (err, files) => {
-    if (err) console.error('Could not list the directory: ', err);
-    for (let key = 0; key < files.length; key++) {
-      if (files[key] === '.DS_Store') continue;
-      let locale = files[key];
-      locale = locale.replace('.json', '');
-      createAlexaSkill.updateInteractionModel(interactionModelDirectory,
+  let files = fs.readdirSync(interactionModelDirectory);
+  console.log('interaction model locales: ', files);
+
+  files.forEach(async (file) => {
+    let locale = file.replace('.json', '');
+    console.log(locale);
+    let updateResult =
+      await createAlexaSkill.updateInteractionModel(interactionModelDirectory,
                                               skillId,
                                               locale,
-                                              access_token)
-        .then((result) => {
-          let url = result.headers.location;
-          let updateAttr = {interactionModelStatusLink: url};
-          dbHelpers.update_one_alexa_skill(skillId, updateAttr)
-            .then((result) => {
-              console.log('updated interaction model link...');
-            });
-        })
-        .catch((err) => {
-          console.error('interaction model status err: ', err);
-          // res.redirect(url.format({
-          //   pathname: `/skills/alexa/${underscoreName}`,
-          //   query: {
-          //     skillName: skillName,
-          //     skillId: skillId,
-          //   },
-          // }));
-        });
+                                              access_token);
+    if (updateResult === 'error') {
+      console.log('update interaction model api error...!');
+      res.redirect('/skills/alexa');
     }
-  });
+    console.log('updated result: ', updateResult.headers);
+    let url = updateResult.headers.location;
+    let updateAttr = {interactionModelStatusLink: url};
 
-  res.redirect('/skills/alexa');
+    await dbHelpers.update_one_alexa_skill(skillId, updateAttr);
+    console.log('updated interaction model for ', locale);
+
+  });
+  res.redirect(`/skills/alexa/${underscoreName}?skillId=${skillId}`);
 };

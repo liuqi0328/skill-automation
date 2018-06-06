@@ -500,7 +500,7 @@ let updateInteractionModel = async (interactionModelDirectory, skillId, locale, 
     .catch((error) => {
       // console.error(error);
       console.log('update interaction model error: ', error.message);
-      return error;
+      return 'error';
     });
 };
 
