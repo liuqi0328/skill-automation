@@ -262,13 +262,26 @@ let createSkillFiles = (data, skillDirectory, underscoreName) => {
   //
   //
   // FINISH CREATING INDEX FILE
+  let handlerString = '';
   let sourceCode =
 `'use strict';
 const Alexa = require('ask-sdk');
 const unhandledMessage = 'I couldn\\'t understand what you said, please say it again.';
-` + createIntentHandler('intentName', 'speech', 'repromptSpeech') +
 `
-const SessionEndedHandler = {
+  for (let i = 0; i < intents.length; i_++) {
+    let intent = intents[i];
+    if (i < intents.length - 1) {
+      handlerString += `${intent.name}, `;
+    } else {
+      handlerSting += `${intent.name}`;
+    }
+
+    // PARSE INTENT INPUT TO INCLUDE SPEECH AND REPROMPT SPEECH
+    sourceCode += createIntentHandler(intent.name, 'speech', 'repromptSpeech');
+  }
+
+  sourceCode +=
+`const SessionEndedHandler = {
   canHandle(handlerInput) {
     const request = handlerInput.requestEnvelope.request;
     return request.type === 'SessionEndedRequest';
@@ -309,15 +322,16 @@ const PersistenceSavingResponseInterceptor = {
     });
   },
 };
+
 const skillBuilder = Alexa.SkillBuilders.standard();
 exports.handler = skillBuilder
-  .addRequestHandlers()
+  .addRequestHandlers(${handlerString})
   .addErrorHandlers()
   .withTableName()
   .withAutoCreateTable(true)
   .addResponseInterceptors(PersistenceSavingResponseInterceptor)
-  .lambda();
-`;
+  .lambda();`;
+
   fs.writeFileSync(`${skillDirectory}/project/index.js`, sourceCode);
   // fs.createReadStream(shellScriptPath).pipe(fs.createWriteStream(`${skillDirectory}/project/create_package.sh`));
 
@@ -534,7 +548,8 @@ exports.checkManifestStatus = checkManifestStatus;
 
 function createIntentHandler(intentName, speech, repromptSpeech) {
   let handler =
-`const ${intentName}Handler = {
+`
+const ${intentName}Handler = {
   canHandle(handlerInput) {
     const request = handlerInput.requestEnvelope.request;
 
@@ -552,6 +567,7 @@ function createIntentHandler(intentName, speech, repromptSpeech) {
       .reprompt(repromptSpeech)
       .getResponse();
   },
-};`;
+};
+`;
   return handler;
 }

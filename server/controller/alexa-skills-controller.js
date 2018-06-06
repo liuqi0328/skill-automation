@@ -118,7 +118,9 @@ exports.create_post = async (req, res) => {
           let underscoreName = skillName.replace(/\ /g, '_');
           let skillDirectory = filepath + '/' + underscoreName;
 
-          let icons = await awsHelpers.uploadIconToS3(newpath, largenewpath, underscoreName);
+          let icons = await awsHelpers.uploadIconToS3(newpath,
+                                                      largenewpath,
+                                                      underscoreName);
 
           console.log('icon........ ', icons);
           console.log('end..............!!!!!');
@@ -127,14 +129,17 @@ exports.create_post = async (req, res) => {
           if (!fs.existsSync(skillDirectory)) fs.mkdirSync(skillDirectory);
 
           // CREATE FILES FOR SKILL CREATION/UPDATE
-          createAlexaSkill.createSkillFiles(data, skillDirectory, underscoreName);
+          createAlexaSkill.createSkillFiles(data,
+                                            skillDirectory,
+                                            underscoreName);
 
           console.log('authorization code: ', code);
           console.log('access token: ', access_token);
 
           await awsHelpers.deploy(data, skillDirectory, underscoreName);
-          let skillData =
-            await createAlexaSkill.create(skillDirectory, underscoreName, access_token);
+          let skillData = await createAlexaSkill.create(skillDirectory,
+                                                        underscoreName,
+                                                        access_token);
           console.log('await skill data: ', skillData);
 
           let bucketName = underscoreName.replace(/_/g, '-');
@@ -195,12 +200,14 @@ exports.skill_get = async (req, res) => {
   let skill = await dbHelpers.get_one_alexa_skill(skillId);
   let skillName = skill.name;
   let manifestStatusLink = skill.skillStatusLink;
-  let result = await createAlexaSkill.checkManifestStatus(manifestStatusLink, access_token);
+  let result = await createAlexaSkill.checkManifestStatus(manifestStatusLink,
+                                                          access_token);
   let status = result.manifest.lastUpdateRequest.status;
   if (status === 'err') res.redirect('/skills/alexa');
   if (status === 'SUCCEEDED') {
     let updateAttr = {skill_manifest_updated: Date.now()};
-    let updatedSkill = await dbHelpers.update_one_alexa_skill(skillId, updateAttr);
+    let updatedSkill = await dbHelpers.update_one_alexa_skill(skillId,
+                                                              updateAttr);
     console.log(updatedSkill);
   }
 
@@ -223,7 +230,10 @@ exports.skill_build_model = async (req, res) => {
       if (files[key] === '.DS_Store') continue;
       let locale = files[key];
       locale = locale.replace('.json', '');
-      createAlexaSkill.updateInteractionModel(interactionModelDirectory, skillId, locale, access_token)
+      createAlexaSkill.updateInteractionModel(interactionModelDirectory,
+                                              skillId,
+                                              locale,
+                                              access_token)
         .then((result) => {
           let url = result.headers.location;
           let updateAttr = {interactionModelStatusLink: url};
