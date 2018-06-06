@@ -375,14 +375,14 @@ let getAccessToken = (code) => {
     });
 };
 
-let createSkill = (skillDirectory, access_token) => {
+let createSkill = (skillDirectory, accessToken) => {
   let skillManifest =
     JSON.parse(fs.readFileSync(`${skillDirectory}/skill.json`, 'utf8'));
   let createSkillOptions = {
     method: 'POST',
     uri: alexaBaseUrl + '/v1/skills',
     headers: {
-      Authorization: access_token,
+      Authorization: accessToken,
     },
     body: skillManifest,
     json: true,
@@ -407,7 +407,7 @@ let createSkill = (skillDirectory, access_token) => {
     });
 };
 
-let updateSkill = (skillDirectory, skillId, access_token) => {
+let updateSkill = (skillDirectory, skillId, accessToken) => {
   let skillManifest =
     JSON.parse(fs.readFileSync(`${skillDirectory}/skill.json`, 'utf8'));
   delete skillManifest.vendorId;
@@ -418,7 +418,7 @@ let updateSkill = (skillDirectory, skillId, access_token) => {
     method: 'PUT',
     uri: alexaBaseUrl + `/v1/skills/${skillId}/stages/development/manifest`,
     headers: {
-      Authorization: access_token,
+      Authorization: accessToken,
     },
     body: skillManifest,
     json: true,
@@ -441,13 +441,13 @@ let updateSkill = (skillDirectory, skillId, access_token) => {
     });
 };
 
-let checkExistingSkill = (underscoreName, access_token) => {
+let checkExistingSkill = (underscoreName, accessToken) => {
   const skillName = underscoreName.replace(/_/g, ' ');
   let checkOptions = {
     method: 'GET',
     uri: alexaBaseUrl + `/v1/skills?vendorId=${vendorId}`,
     headers: {
-      Authorization: access_token,
+      Authorization: accessToken,
     },
     json: true,
     // resolveWithFullResponse: true,
@@ -472,7 +472,7 @@ let checkExistingSkill = (underscoreName, access_token) => {
     });
 };
 
-let updateInteractionModel = async (interactionModelDirectory, skillId, locale, access_token) => {
+let updateInteractionModel = async (interactionModelDirectory, skillId, locale, accessToken) => {
   // let allLocales = ['en-US', 'en-AU', 'en-GB', 'en-IN', 'en-CA'];
   // if (!allLocales.includes(locale)) {
   //   console.log('Incorrect locale...');
@@ -485,7 +485,7 @@ let updateInteractionModel = async (interactionModelDirectory, skillId, locale, 
     uri: alexaBaseUrl +
       `/v1/skills/${skillId}/stages/development/interactionModel/locales/${locale}`,
     headers: {
-      Authorization: access_token,
+      Authorization: accessToken,
     },
     body: interactionModel,
     json: true,
@@ -504,25 +504,25 @@ let updateInteractionModel = async (interactionModelDirectory, skillId, locale, 
     });
 };
 
-let create = async (skillDirectory, underscoreName, access_token) => {
+let create = async (skillDirectory, underscoreName, accessToken) => {
   let skillId;
   let data;
-  let check = await checkExistingSkill(underscoreName, access_token);
+  let check = await checkExistingSkill(underscoreName, accessToken);
   if (check) {
     skillId = check.skillId;
-    data = await updateSkill(skillDirectory, skillId, access_token);
+    data = await updateSkill(skillDirectory, skillId, accessToken);
   } else {
-    data = await createSkill(skillDirectory, access_token);
+    data = await createSkill(skillDirectory, accessToken);
   }
   return data;
 };
 
-let checkManifestStatus = (url, access_token) => {
+let checkManifestStatus = (url, accessToken) => {
   let checkOptions = {
     method: 'GET',
     uri: alexaBaseUrl + url,
     headers: {
-      Authorization: access_token,
+      Authorization: accessToken,
     },
     json: true,
     // resolveWithFullResponse: true,

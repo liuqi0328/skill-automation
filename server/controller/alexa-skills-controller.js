@@ -1,7 +1,7 @@
 'use strict';
 
 const fs = require('fs');
-const url = require('url');
+// const url = require('url');
 const formidable = require('formidable');
 
 // const path = require('path');
@@ -12,7 +12,7 @@ const awsHelpers = require('./helpers/amazon/aws-helpers');
 const dbHelpers = require('./helpers/db-helper');
 
 let code;
-let access_token;
+let accessToken;
 
 // function index(req, res) {
 //   console.log('skills index');
@@ -29,16 +29,16 @@ exports.index = async (req, res) => {
   // let s3 = await awsHelpers.awsS3listbuckets();
   // console.log(s3);
 
-  if (!access_token) {
-    let accessToken = await createAlexaSkill.getAccessToken(code);
-    access_token = accessToken.access_token;
+  if (!accessToken) {
+    let getAccessToken = await createAlexaSkill.getAccessToken(code);
+    accessToken = getAccessToken.access_token;
   }
   // access_token = accessToken.access_token;
-  console.log('skill index access token: ', access_token);
+  console.log('skill index access token: ', accessToken);
 
   let skills = await dbHelpers.get_all_alexa_skills();
   // console.log('final skills list: ', skills);
-  res.render('skills/alexa/index', {data: skills, access_token: access_token});
+  res.render('skills/alexa/index', {data: skills, access_token: accessToken});
 };
 
 exports.create_get = (req, res) => {
@@ -49,7 +49,7 @@ exports.create_get = (req, res) => {
 };
 
 exports.create_post = async (req, res) => {
-  console.log('create skill post access token: ', access_token);
+  console.log('create skill post access token: ', accessToken);
 
   // CREATE TEMP DIRECTORY TO SAVE ICON IMAGE
   let iconTempDirectory = filepath + '/icons';
@@ -105,12 +105,12 @@ exports.create_post = async (req, res) => {
                                       underscoreName);
 
     console.log('authorization code: ', code);
-    console.log('access token: ', access_token);
+    console.log('access token: ', accessToken);
 
     await awsHelpers.deploy(data, skillDirectory, underscoreName);
     let skillData = await createAlexaSkill.create(skillDirectory,
                                                   underscoreName,
-                                                  access_token);
+                                                  accessToken);
     console.log('await skill data: ', skillData);
 
     let bucketName = underscoreName.replace(/_/g, '-');
@@ -139,7 +139,7 @@ exports.skill_get = async (req, res) => {
   let skillName = skill.name;
   let manifestStatusLink = skill.skillStatusLink;
   let result = await createAlexaSkill.checkManifestStatus(manifestStatusLink,
-                                                          access_token);
+                                                          accessToken);
   let status = result.manifest.lastUpdateRequest.status;
   if (status !== 'SUCCEEDED') res.redirect('/skills/alexa');
   if (status === 'SUCCEEDED') {
@@ -168,11 +168,16 @@ exports.skill_build_interaction_model = async (req, res) => {
   files.forEach(async (file) => {
     let locale = file.replace('.json', '');
     console.log(locale);
+    /**
+     * createAlexaSkill.updateInteractionModel returns a json if success or
+     * 'error' string when there was a problem sending a 'PUT' request to
+     * Alexa api.
+     */
     let updateResult =
       await createAlexaSkill.updateInteractionModel(interactionModelDirectory,
                                               skillId,
                                               locale,
-                                              access_token);
+                                              accessToken);
     if (updateResult === 'error') {
       console.log('update interaction model api error...!');
       res.redirect('/skills/alexa');
@@ -183,7 +188,6 @@ exports.skill_build_interaction_model = async (req, res) => {
 
     await dbHelpers.update_one_alexa_skill(skillId, updateAttr);
     console.log('updated interaction model for ', locale);
-
   });
   res.redirect(`/skills/alexa/${underscoreName}?skillId=${skillId}`);
 };
