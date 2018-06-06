@@ -62,7 +62,15 @@ exports.create_post = async (req, res) => {
     console.log('files: ', files);
 
     /**
-     * Move uploaded small and large icons to temp directory
+     * Move uploaded small and large icons to temp directory:
+     * Small Icon: {
+     *   size: 108x108,
+     *   new location: project_directory/temp/{filename}.png
+     * }
+     * Large Icon: {
+     *   size: 512x512,
+     *   new location: project_directory/temp/{filename}.png
+     * }
      */
     let oldpath = files.small_icon.path;
     let newpath = iconTempDirectory + '/' + files.small_icon.name;
@@ -144,8 +152,12 @@ exports.skill_get = async (req, res) => {
     console.log(updatedSkill);
   }
 
-  res.render('skills/alexa/skill',
-             {skillName: skillName, skillId: skillId, status: status});
+  let clientData = {
+    skillName: skillName,
+    skillId: skillId,
+    status: status,
+  };
+  res.render('skills/alexa/skill', clientData);
 };
 
 exports.skill_build_interaction_model = async (req, res) => {
@@ -162,17 +174,17 @@ exports.skill_build_interaction_model = async (req, res) => {
 
   files.forEach(async (file) => {
     let locale = file.replace('.json', '');
-    console.log(locale);
     /**
      * createAlexaSkill.updateInteractionModel returns a json if success or
      * 'error' string when there was a problem sending a 'PUT' request to
-     * Alexa api.
+     * Alexa api for updating the interaction model for the corresponding
+     * locale.
      */
     let updateResult =
       await createAlexaSkill.updateInteractionModel(interactionModelDirectory,
-                                              skillId,
-                                              locale,
-                                              accessToken);
+                                                    skillId,
+                                                    locale,
+                                                    accessToken);
     if (updateResult === 'error') {
       console.log('update interaction model api error...!');
       res.redirect('/skills/alexa');

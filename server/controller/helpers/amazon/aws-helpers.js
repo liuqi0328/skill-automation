@@ -154,7 +154,7 @@ const addFileToS3 = async (skillDirectory, underscoreName) => {
 
       AlexaSkill.findOne({name: underscoreName}, (err, data) => {
         if (err) console.log('db find one err: ', err);
-        // ADD DELETE PREVIOUS VERSION
+        // TODO: ADD DELETE PREVIOUS VERSION
         data.update({s3Key: fileKey}, (err, data) => {
           if (err) console.log('db s3 link update err: ', err);
           AlexaSkill.findOne({name: underscoreName}, (err, data) => {
