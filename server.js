@@ -38,5 +38,5 @@ db.once('open', () => {
 
   app.listen(port);
 
-  console.log('API server started on: ' + port);
+  console.log('Server started on: ' + port);
 });
