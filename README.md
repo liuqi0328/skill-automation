@@ -1,4 +1,4 @@
-# Skill Automation API
+# Skill Automation
 
 ## Install [MongoDB](https://www.mongodb.com)
 
@@ -12,8 +12,25 @@ Use dotenv to pass in environment variables to run locally:
 
 Create `.env` file in the root directory of the project.
 
-```
-// .env file
+```bash
+# .env file
+
+# Vendor ID for Alexa Developer Portal
 VENDOR_ID=M2LCJQMQ8K0T24
+
+# Local MongoDB Database
 DB_HOST=mongodb://localhost/skillAutomationdb
+```
+
+## Fix Installed Packages
+
+```bash
+# !/usr/bin/env bash
+
+# To delete all installed packages
+npm clean
+
+# To delete and reinstall all packages
+npm reinstall
+
 ```
