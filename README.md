@@ -2,10 +2,20 @@
 
 ## Install [MongoDB](https://www.mongodb.com)
 
+After installing MongoDB, start the daemon process for the MongoDB system.
+
+```bash
+# !/usr/bin/env bash
+
+mongod
+```
+
+Keep the process running while running the application locally.
+
 ## Environment Variables
 
-- Vendor ID as VENDOR_ID
-- DB as DB_HOST
+- Vendor ID as **VENDOR_ID**
+- DB as **DB_HOST**
 
 Use dotenv to pass in environment variables to run locally:
 `require('dotenv').config()`
