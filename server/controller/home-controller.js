@@ -6,3 +6,4 @@ function index(req, res) {
 }
 
 exports.index = index;
+

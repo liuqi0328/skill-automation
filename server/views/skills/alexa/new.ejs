@@ -1,9 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ALEXA</title>
+    <link href='https://fonts.googleapis.com/css?family=Abel' rel='stylesheet'>
+    <link href="/main.css" rel="stylesheet" type="text/css">
 </head>
 <body>
+      <header id="header">
+        <div class="logo", ><a href="../">Skill Automation <span>by FRESH DIGITAL GROUP</span></a></div>
+      </header>
+
+      <br>
+      <br>
+      <br>
   <form action="/skills/alexa/new" method="post" enctype="multipart/form-data">
     <div>
       <label for="skill_name">Enter name: </label>
@@ -12,27 +22,33 @@
     <div>
       <input id="platform_name" type="hidden" name="platform" value="alexa">
     </div>
+    <br>
     <div>
       <label for="summary">Enter summary: </label>
       <input id="summary" type="text" name="summary" value="Default summary">
     </div>
+    <br>
     <div>
       <label for="description">Enter description: </label>
       <input id="description" type="text" name="description" value="Default description">
     </div>
+    <br>
     <div>
       <label for="locales">Enter locales: </label>
       <input id="locales" type="text" name="locales" value="en-US, en-AU, en-IN, en-CA, en-GB">
     </div>
     <div>
+      <br>
       <label for="small_icon">Small Icon: </label>
       <input id="small_icon" type="file" name="small_icon">
     </div>
     <div>
+      <br>
       <label for="large_icon">Large Icon: </label>
       <input id="large_icon" type="file" name="large_icon">
     </div>
     <div>
+      <br>
       <input type="submit" value="OK">
     </div>
   </form>
@@ -45,5 +61,6 @@
       alert(tmp);
     }
   </script>
+    <!-- Scripts -->
 </body>
 </html>

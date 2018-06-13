@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Skills</title>
+    <link href='https://fonts.googleapis.com/css?family=Abel' rel='stylesheet'>
+    <link href="/main.css" rel="stylesheet" type="text/css">
 </head>
-<body>
-  <div id="amazon-root"></div>
+    <body class="subpage">
+<div id="amazon-root"></div>
   <script type="text/javascript">
 
     window.onAmazonLoginReady = function() {
@@ -18,14 +21,47 @@
     })(document);
 
   </script>
-  <h1>Skills</h1>
-  <!-- <a href="/skills/new">Create Skill</a> -->
-  <div>
-    <a href="#" id="LoginWithAmazon">
+    <!-- Header -->
+      <header id="header">
+        <div class="logo", ><a href="../">Skill Automation <span>by FRESH DIGITAL GROUP</span></a></div>
+      </header>
+    <!-- One -->
+      <section id="one" class="wrapper style2">
+        <div class="inner">
+          <div class="box">
+            <div class="content">
+              <header class="align-center">
+                <h2>Choose One</h2>
+                <p>Generated Voice Application</p>
+              </header>
+              <hr />
+              <a href="#" id="LoginWithAmazon"class="button special scrolly" style=" margin: 110px; position: relative;">Alexa Skill</a>
+              <script type="text/javascript">
+
+      document.getElementById('LoginWithAmazon').onclick = function() {
+        options = {} ;
+        options.scope = 'alexa::ask:skills:readwrite alexa::ask:models:readwrite';
+        options.response_type = 'code';
+        amazon.Login.authorize(options, 'http://localhost:8080/skills/alexa');
+        return false;
+      };
+    </script>
+              <a href="skills.html" class="button special scrolly" style="margin: 110px; position: relative;;";>Google Action</a>
+              <a href="skills.html" class="button special scrolly" style="margin: 110px; position: relative;">Cortana Skill</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+</div>
+
+<!--<ul>
+  <li><a href="#" id="LoginWithAmazon">
       Alexa Skills
-      <!-- <img border="0" alt="Login with Amazon"
+      
+      <img border="0" alt="Login with Amazon"
         src="https://images-na.ssl-images-amazon.com/images/G/01/lwa/btnLWA_gold_156x32.png"
-        width="156" height="32" /> -->
+        width="156" height="32" />
     </a>
     <script type="text/javascript">
 
@@ -37,14 +73,11 @@
         return false;
       };
 
-    </script>
-  </div>
-  <div>
-    <a href="/skills/google/new">Google Actions</a>
-  </div>
-  <div>
-    <a href="/skills/cortana/new">Cortana Skills</a>
-  </div>
+    </script></li>
+  <li><a href="#">Google Actions</a></li>
+  <li><a href="#">Cortana Skills</a></li>
+</ul> -->
+
 </body>
 <footer>
   <% include ../partials/footer %>
