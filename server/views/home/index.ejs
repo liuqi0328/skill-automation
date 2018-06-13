@@ -1,16 +1,35 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= title %></title>
-<!--     <link rel='stylesheet' href='/stylesheets/style.css' />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Skill Automation</title>
+    <link href='https://fonts.googleapis.com/css?family=Abel' rel='stylesheet'>
+    <link href="/main.css" rel="stylesheet" type="text/css">
+ <!-- <link rel="stylesheet" type="text/css" href="main.css">
 
-    <script src="/vendor/angular/angular.js"></script>
+   <script src="/vendor/angular/angular.js"></script>
     <script src="/vendor/requirejs/require.js" data-main="/vendor/requirejs.config.js"></script> -->
 
   </head>
   <body>
-    <h1><%= title %></h1>
-    <p>Welcome to <%= title %></p>
+  <!-- Header -->
+      <header id="header" class="alt">
+        <div class="logo"><a href="index.ejs">Skill Automation <span>by FRESH DIGITAL GROUP</span></a></div>
+      </header>
+
+    <!-- Banner -->
+    <!--
+      To use a video as your background, set data-video to the name of your video without
+      its extension (eg. images/banner). Your video must be available in both .mp4 and .webm
+      formats to work correctly.
+    -->
+      <section id="banner" data-video="images/banner">
+        <div class="inner">
+          <h1>Skill Automation</h1>
+          <a href="../skills/index.ejs" class="button special scrolly">Get Started</a>
+        </div>
+      </section>
+
   </body>
   <footer>
     <% include ../partials/footer %>

@@ -25,6 +25,8 @@ db.once('open', function() {
   app.use(bodyParser.urlencoded({extended: true}));
   app.use(bodyParser.json());
 
+  app.use(express.static(path.join(__dirname, '/server/public')))
+
   // API ROUTES
   let apiRoutes = require('./api/routes/routes');
   apiRoutes(app);

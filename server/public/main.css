@@ -1,0 +1,76 @@
+{
+    box-sizing: border-box;
+}
+
+/* Create three equal columns that floats next to each other */
+.column {
+    float: right;
+    position: relative;
+    width: 20%;
+    margin-right: 20px;
+    padding: 20px;
+    height: 300px; 
+    letter-spacing: 3px;
+    text-align: center;
+}
+
+/* Clear floats after the columns */
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+body {
+  margin: 0;
+  font-family: 'Abel';
+  background-color: #f1f1f1;
+}
+#myVideo {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    min-width: 100%; 
+    min-height: 100%;
+}
+
+/* Style the header */
+.header {
+    background-color: #8a8a8a;
+    padding: 20px;
+    text-align: left;
+    margin-left: 40px;
+    font-family: 'Abel';
+    color: #f1f1f1;
+    letter-spacing: 3px;
+}
+ul {
+    list-style-type: none;
+    margin: 40px;
+    padding: 0;
+    width: 25%;
+    background-color: #8a8a8a;
+    position: fixed;
+    height: 100%;
+    overflow: auto;
+    font-family: 'Abel';
+    font-size: 17px;
+    letter-spacing: 3px;
+}
+
+li a {
+    display: block;
+    color: #000;
+    padding: 60px 80px;
+    text-decoration: none;
+}
+
+li a.active {
+    background-color: #4CAF50;
+    color: white;
+}
+
+li a:hover:not(.active) {
+    background-color: #555;
+    color: white;
+}

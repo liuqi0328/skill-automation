@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title></title>
+  <title>Alexa Skills</title>
+      <link href='https://fonts.googleapis.com/css?family=Abel' rel='stylesheet'>
+    <link href="/main.css" rel="stylesheet" type="text/css">
 </head>
 <body>
   <div id="amazon-root"></div>
@@ -18,10 +20,12 @@
     })(document);
 
   </script>
-  <h1>Skills</h1>
-  <!-- <a href="/skills/new">Create Skill</a> -->
-  <div>
-    <a href="#" id="LoginWithAmazon">
+  <div class="header">
+  <h1>SELECT VOICE APPLICATION</h1>
+</div>
+
+<ul>
+  <li><a href="#" id="LoginWithAmazon">
       Alexa Skills
       <!-- <img border="0" alt="Login with Amazon"
         src="https://images-na.ssl-images-amazon.com/images/G/01/lwa/btnLWA_gold_156x32.png"
@@ -37,14 +41,11 @@
         return false;
       };
 
-    </script>
-  </div>
-  <div>
-    <a href="/skills/google/new">Google Actions</a>
-  </div>
-  <div>
-    <a href="/skills/cortana/new">Cortana Skills</a>
-  </div>
+    </script></li>
+  <li><a href="#">Google Actions</a></li>
+  <li><a href="#">Cortana Skills</a></li>
+</ul>
+
 </body>
 <footer>
   <% include ../partials/footer %>
