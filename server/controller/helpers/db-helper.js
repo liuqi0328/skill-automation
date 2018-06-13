@@ -7,31 +7,37 @@ exports.alexa_skill_to_db = async (data) => {
   let skillName = data.skillName;
   let skillId = data.skillId;
   let skillStatusLink = data.skillStatusLink;
+  let smallIconLink = data.smallIconLink;
+  let largeIconLink = data.largeIconLink;
+
   let options = {name: skillName};
   let skill = await getOneAlexaSkill(options);
-  // let skill = await AlexaSkill.findOne({name: skillName}, (err, data) => {
-  //   console.log('getting data...');
-  //   return data;
-  // });
   console.log('skill db: ', skill);
+
   let dbData;
+  let skillOptions;
   if (!skill) {
-    dbData = await AlexaSkill.create({
+    skillOptions = {
       name: skillName,
       skillId: skillId,
+      platform: 'alexa',
       skillStatusLink: skillStatusLink,
-    });
+      smallIconLink: smallIconLink,
+      largeIconLink: largeIconLink,
+    };
+    dbData = await AlexaSkill.create(skillOptions);
     console.log('new alexa skill created: ', dbData);
     return dbData;
   } else {
-    // return skill;
-    dbData = await skill.update({skillStatusLink: skillStatusLink, platform: 'alexa', updated_date: Date.now()}).exec();
+    skillOptions = {
+      skillStatusLink: skillStatusLink,
+      smallIconLink: smallIconLink,
+      largeIconLink: largeIconLink,
+      updated_date: Date.now(),
+    };
+    dbData = await skill.update(skillOptions).exec();
     let options = {name: skillName};
     let updatedSkill = await getOneAlexaSkill(options);
-    // let updatedSkill = await AlexaSkill.findOne({name: skillName}, (err, data) => {
-    //   console.log('getting updated data...');
-    //   return data;
-    // });
     console.log('updated new doc: ', updatedSkill);
     return updatedSkill;
   }
@@ -39,29 +45,23 @@ exports.alexa_skill_to_db = async (data) => {
 
 exports.get_all_alexa_skills = async () => {
   let skills = await AlexaSkill.find();
-  console.log('skill index: ', skills);
+  // console.log('skill index: ', skills);
   return skills;
 };
 
 exports.get_one_alexa_skill = async (skillId) => {
   let options = {skillId: skillId};
   let skill = await getOneAlexaSkill(options);
-  // let skill = await AlexaSkill.findOne({skillId: skillId}, (err, data) => {
-  //   console.log('getting data...');
-  //   return data;
-  // });
   return skill;
 };
 
 exports.update_one_alexa_skill = async (skillId, updateAttr) => {
   let options = {skillId: skillId};
   let skill = await getOneAlexaSkill(options);
-  // let skill = await AlexaSkill.findOne({skillId: skillId}, (err, data) => {
-  //   console.log('getting data...');
-  //   return data;
-  // });
-  await skill.update(updateAttr).exec();
-  options = {skillId: skillId};
+
+  let updateDB = await skill.update(updateAttr).exec();
+  console.log(updateDB);
+
   let updatedSkill = await getOneAlexaSkill(options);
   console.log('updated new doc: ', updatedSkill);
   return updatedSkill;

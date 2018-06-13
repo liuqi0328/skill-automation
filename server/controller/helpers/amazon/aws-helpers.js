@@ -55,11 +55,63 @@ const awsS3listbuckets = () => {
         console.log(err, err.stack); // an error occurred
         reject(err);
       } else {
-        console.log(data); // successful response
+        // console.log(data); // successful response
         resolve(data);
       }
     });
   });
+};
+
+const uploadIconToS3 = async (smallfilepath, largefilepath, underscoreName) => {
+  await awsSetup();
+  let buckets = await awsS3listbuckets();
+
+  let skillBucketName = underscoreName.replace(/_/g, '-');
+  let bucket = buckets.Buckets.find((bucket) => {
+    return bucket.name == skillBucketName;
+  });
+
+  console.log('first bucket call: ', bucket);
+
+  let s3 = new AWS.S3({apiVersion: '2006-03-01'});
+
+  if (!bucket) {
+    let params = {Bucket: skillBucketName};
+    return new Promise((resolve, reject) => {
+      s3.createBucket(params, async function(err, data) {
+        if (err) {
+          console.log(err, err.stack);
+          reject(err);
+        } else {
+          console.log('bucket created!');
+          console.log('upload icon after bucket');
+
+          let small = await putObject(smallfilepath,
+                                      underscoreName,
+                                      skillBucketName,
+                                      108);
+          let large = await putObject(largefilepath,
+                                      underscoreName,
+                                      skillBucketName,
+                                      512);
+          resolve(small, large);
+        }
+      });
+    });
+  } else {
+    console.log('upload icon');
+
+    let small = await putObject(smallfilepath,
+                                underscoreName,
+                                skillBucketName,
+                                108);
+    let large = await putObject(largefilepath,
+                                underscoreName,
+                                skillBucketName,
+                                512);
+
+    return [small, large];
+  }
 };
 
 /**
@@ -102,7 +154,7 @@ const addFileToS3 = async (skillDirectory, underscoreName) => {
 
       AlexaSkill.findOne({name: underscoreName}, (err, data) => {
         if (err) console.log('db find one err: ', err);
-        // ADD DELETE PREVIOUS VERSION
+        // TODO: ADD DELETE PREVIOUS VERSION
         data.update({s3Key: fileKey}, (err, data) => {
           if (err) console.log('db s3 link update err: ', err);
           AlexaSkill.findOne({name: underscoreName}, (err, data) => {
@@ -239,6 +291,26 @@ const deploy = (data, skillDirectory, underscoreName) => {
 
 // exports.awsSetup = awsSetup;
 exports.awsS3listbuckets = awsS3listbuckets;
-// exports.deployToAWSLambda = deployToAWSLambda;
+exports.uploadIconToS3 = uploadIconToS3;
 exports.deploy = deploy;
 exports.addFileToS3 = addFileToS3;
+
+let putObject = (filepath, underscoreName, bucketName, imgSize) => {
+  let s3 = new AWS.S3({apiVersion: '2006-03-01'});
+  let icon = fs.createReadStream(filepath);
+  return new Promise((resolve, reject) => {
+    s3.putObject({
+      Bucket: bucketName,
+      Key: `assets/images/${imgSize}/${underscoreName}${imgSize}.png`,
+      ACL: 'public-read',
+      Body: icon,
+    }, (err, data) => {
+      if (err) {
+        console.error('upload icon err: ', err);
+        reject(err);
+      }
+      console.log('upload icon success: ', data);
+      resolve(data);
+    });
+  });
+};

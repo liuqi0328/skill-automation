@@ -108,9 +108,9 @@ let createSkillFiles = (data, skillDirectory, underscoreName) => {
     `Alexa, open ${skillName}.`,
   ];
   const category = 'SMART_HOME'; // CHANGE CATEGORY
-  const imageName = underscoreName.replace(/_/g, '-');
-  const smallIconSrc = `https://s3.amazonaws.com/${imageName}/assets/images/108/${imageName}108.png`; // UPDATE SKILL ICON LINKS
-  const largeIconSrc = `https://s3.amazonaws.com/${imageName}/assets/images/512/${imageName}512.png`; // UPDATE SKILL ICON LINKS
+  const bucketName = underscoreName.replace(/_/g, '-');
+  const smallIconSrc = `https://s3.amazonaws.com/${bucketName}/assets/images/108/${underscoreName}108.png`; // UPDATE SKILL ICON LINKS
+  const largeIconSrc = `https://s3.amazonaws.com/${bucketName}/assets/images/512/${underscoreName}512.png`; // UPDATE SKILL ICON LINKS
   const privacyPolicyUrl = 'https://www.freshdigitalgroup.com/privacy-policy-for-bots';
   const termsOfUseUrl = 'https://www.freshdigitalgroup.com/voice-applications-amazon-terms-of-use';
 
@@ -262,13 +262,26 @@ let createSkillFiles = (data, skillDirectory, underscoreName) => {
   //
   //
   // FINISH CREATING INDEX FILE
+  let handlerString = '';
   let sourceCode =
 `'use strict';
 const Alexa = require('ask-sdk');
 const unhandledMessage = 'I couldn\\'t understand what you said, please say it again.';
-` + createIntentHandler('intentName', 'speech', 'repromptSpeech') +
 `
-const SessionEndedHandler = {
+  for (let i = 0; i < intents.length; i++) {
+    let intent = intents[i];
+    if (i < intents.length - 1) {
+      handlerString += `${intent.name}, `;
+    } else {
+      handlerString += `${intent.name}`;
+    }
+
+    // PARSE INTENT INPUT TO INCLUDE SPEECH AND REPROMPT SPEECH
+    sourceCode += createIntentHandler(intent.name, 'speech', 'repromptSpeech');
+  }
+
+  sourceCode +=
+`const SessionEndedHandler = {
   canHandle(handlerInput) {
     const request = handlerInput.requestEnvelope.request;
     return request.type === 'SessionEndedRequest';
@@ -309,15 +322,16 @@ const PersistenceSavingResponseInterceptor = {
     });
   },
 };
+
 const skillBuilder = Alexa.SkillBuilders.standard();
 exports.handler = skillBuilder
-  .addRequestHandlers()
+  .addRequestHandlers(${handlerString})
   .addErrorHandlers()
   .withTableName()
   .withAutoCreateTable(true)
   .addResponseInterceptors(PersistenceSavingResponseInterceptor)
-  .lambda();
-`;
+  .lambda();`;
+
   fs.writeFileSync(`${skillDirectory}/project/index.js`, sourceCode);
   // fs.createReadStream(shellScriptPath).pipe(fs.createWriteStream(`${skillDirectory}/project/create_package.sh`));
 
@@ -361,14 +375,14 @@ let getAccessToken = (code) => {
     });
 };
 
-let createSkill = (skillDirectory, access_token) => {
+let createSkill = (skillDirectory, accessToken) => {
   let skillManifest =
     JSON.parse(fs.readFileSync(`${skillDirectory}/skill.json`, 'utf8'));
   let createSkillOptions = {
     method: 'POST',
     uri: alexaBaseUrl + '/v1/skills',
     headers: {
-      Authorization: access_token,
+      Authorization: accessToken,
     },
     body: skillManifest,
     json: true,
@@ -393,7 +407,7 @@ let createSkill = (skillDirectory, access_token) => {
     });
 };
 
-let updateSkill = (skillDirectory, skillId, access_token) => {
+let updateSkill = (skillDirectory, skillId, accessToken) => {
   let skillManifest =
     JSON.parse(fs.readFileSync(`${skillDirectory}/skill.json`, 'utf8'));
   delete skillManifest.vendorId;
@@ -404,7 +418,7 @@ let updateSkill = (skillDirectory, skillId, access_token) => {
     method: 'PUT',
     uri: alexaBaseUrl + `/v1/skills/${skillId}/stages/development/manifest`,
     headers: {
-      Authorization: access_token,
+      Authorization: accessToken,
     },
     body: skillManifest,
     json: true,
@@ -427,13 +441,13 @@ let updateSkill = (skillDirectory, skillId, access_token) => {
     });
 };
 
-let checkExistingSkill = (underscoreName, access_token) => {
+let checkExistingSkill = (underscoreName, accessToken) => {
   const skillName = underscoreName.replace(/_/g, ' ');
   let checkOptions = {
     method: 'GET',
     uri: alexaBaseUrl + `/v1/skills?vendorId=${vendorId}`,
     headers: {
-      Authorization: access_token,
+      Authorization: accessToken,
     },
     json: true,
     // resolveWithFullResponse: true,
@@ -458,7 +472,7 @@ let checkExistingSkill = (underscoreName, access_token) => {
     });
 };
 
-let updateInteractionModel = async (interactionModelDirectory, skillId, locale, access_token) => {
+let updateInteractionModel = async (interactionModelDirectory, skillId, locale, accessToken) => {
   // let allLocales = ['en-US', 'en-AU', 'en-GB', 'en-IN', 'en-CA'];
   // if (!allLocales.includes(locale)) {
   //   console.log('Incorrect locale...');
@@ -471,7 +485,7 @@ let updateInteractionModel = async (interactionModelDirectory, skillId, locale, 
     uri: alexaBaseUrl +
       `/v1/skills/${skillId}/stages/development/interactionModel/locales/${locale}`,
     headers: {
-      Authorization: access_token,
+      Authorization: accessToken,
     },
     body: interactionModel,
     json: true,
@@ -486,29 +500,29 @@ let updateInteractionModel = async (interactionModelDirectory, skillId, locale, 
     .catch((error) => {
       // console.error(error);
       console.log('update interaction model error: ', error.message);
-      return error;
+      return 'error';
     });
 };
 
-let create = async (skillDirectory, underscoreName, access_token) => {
+let create = async (skillDirectory, underscoreName, accessToken) => {
   let skillId;
   let data;
-  let check = await checkExistingSkill(underscoreName, access_token);
+  let check = await checkExistingSkill(underscoreName, accessToken);
   if (check) {
     skillId = check.skillId;
-    data = await updateSkill(skillDirectory, skillId, access_token);
+    data = await updateSkill(skillDirectory, skillId, accessToken);
   } else {
-    data = await createSkill(skillDirectory, access_token);
+    data = await createSkill(skillDirectory, accessToken);
   }
   return data;
 };
 
-let checkManifestStatus = (url, access_token) => {
+let checkManifestStatus = (url, accessToken) => {
   let checkOptions = {
     method: 'GET',
     uri: alexaBaseUrl + url,
     headers: {
-      Authorization: access_token,
+      Authorization: accessToken,
     },
     json: true,
     // resolveWithFullResponse: true,
@@ -520,7 +534,7 @@ let checkManifestStatus = (url, access_token) => {
     })
     .catch((err) => {
       console.log('manifest status check err: ', err);
-      return 'err';
+      return err;
     });
 };
 
@@ -534,7 +548,8 @@ exports.checkManifestStatus = checkManifestStatus;
 
 function createIntentHandler(intentName, speech, repromptSpeech) {
   let handler =
-`const ${intentName}Handler = {
+`
+const ${intentName}Handler = {
   canHandle(handlerInput) {
     const request = handlerInput.requestEnvelope.request;
 
@@ -552,6 +567,7 @@ function createIntentHandler(intentName, speech, repromptSpeech) {
       .reprompt(repromptSpeech)
       .getResponse();
   },
-};`;
+};
+`;
   return handler;
 }

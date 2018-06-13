@@ -4,8 +4,8 @@ module.exports = (app) => {
   let home = require('../controller/home-controller');
   let skills = require('../controller/skills-controller');
   let alexaSkills = require('../controller/alexa-skills-controller');
-  let googleActions = require('../controller/google-actions-controller');
-  let cortanaSkills = require('../controller/cortana-skills-controller');
+  // let googleActions = require('../controller/google-actions-controller');
+  // let cortanaSkills = require('../controller/cortana-skills-controller');
 
   app.route('/')
     .get(home.index);
@@ -24,7 +24,7 @@ module.exports = (app) => {
     .get(alexaSkills.skill_get);
 
   app.route('/skills/alexa/:skillName/interaction_model')
-    .get(alexaSkills.skill_build_model);
+    .get(alexaSkills.skill_build_interaction_model);
 
   // app.route('/skills/google/new')
   //   .get(googleActions.create_get)
