@@ -136,6 +136,7 @@ exports.create_post = async (req, res) => {
 
 exports.skill_get = async (req, res) => {
   console.log('skill info page');
+  console.log('req: ', req);
   console.log('req query: ', req.query);
   let skillId = req.query.skillId;
   let skill = await dbHelpers.get_one_alexa_skill(skillId);
