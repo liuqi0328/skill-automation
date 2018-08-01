@@ -14,6 +14,9 @@ const dbHelpers = require('./helpers/db-helper');
 let code;
 let accessToken;
 
+let _fields;
+let _files;
+
 // function index(req, res) {
 //   console.log('skills index');
 //   res.render('skills/index');
@@ -22,6 +25,7 @@ let accessToken;
 exports.index = async (req, res) => {
   console.log('skill index');
   console.log('skill index code: ', req.query.code);
+  console.log(req.url);
   if (req.query.code) {
     code = req.query.code;
   }
@@ -43,23 +47,55 @@ exports.index = async (req, res) => {
 
 exports.create_get = (req, res) => {
   console.log('skills create get');
+  console.log('ACE: ', req.url);
   // console.log('create skill get code: ', req.query.code);
   // if (req.query.code) code = req.query.code;
   res.render('skills/alexa/new', {msg: ''});
 };
 
 exports.create_post = async (req, res) => {
-  console.log('create skill post access token: ', accessToken);
-
-  // CREATE TEMP DIRECTORY TO SAVE ICON IMAGE
-  let iconTempDirectory = filepath + '/icons';
-  if (!fs.existsSync(iconTempDirectory)) fs.mkdirSync(iconTempDirectory);
+  //console.log('create skill post access token: ', accessToken);
 
   console.log('---------------------------------');
   let form = new formidable.IncomingForm();
   form.parse(req, async (err, fields, files) => {
-    console.log('fields: ', fields);
-    console.log('files: ', files);
+    //console.log('fields: ', fields);
+    //console.log('files: ', files);
+
+    _fields = fields;
+    _files = files;
+
+
+    res.sendFile(process.cwd() + '/graphic.html');
+  });
+};
+
+exports.create_post_2 = async (req, res) => {
+
+    let files = _files;
+    let fields = _fields;
+
+    console.log(files);
+    console.log(fields);
+
+    let finalData = JSON.parse(req.body.graphic);
+    console.log(finalData)
+
+    // // BUILD LOCALES
+    // let inputLocales = fields.locales;
+    // let seperator = /\s*,\s*/;
+    // let arrayOfLocales = [];
+    // if (inputLocales) {
+    //   arrayOfLocales = inputLocales.split(seperator);
+    // } else {
+    //   arrayOfLocales.push('en-US');
+    // }
+    // fields.locales = arrayOfLocales;
+
+    // let underscoreName = 'junran_test';
+    // let skillDirectory = filepath + '/' + underscoreName;
+
+    // createAlexaSkill.createSkillFiles(fields, skillDirectory, underscoreName, finalData);
 
     /**
      * Move uploaded small and large icons to temp directory:
@@ -72,6 +108,12 @@ exports.create_post = async (req, res) => {
      *   new location: project_directory/temp/{filename}.png
      * }
      */
+
+    //CREATE TEMP DIRECTORY TO SAVE ICON IMAGE
+    let iconTempDirectory = filepath + '/icons';
+    if (!fs.existsSync(filepath)) fs.mkdirSync(filepath);
+    if (!fs.existsSync(iconTempDirectory)) fs.mkdirSync(iconTempDirectory);
+
     let oldpath = files.small_icon.path;
     let newpath = iconTempDirectory + '/' + files.small_icon.name;
     fs.renameSync(oldpath, newpath);
@@ -105,7 +147,7 @@ exports.create_post = async (req, res) => {
     if (!fs.existsSync(skillDirectory)) fs.mkdirSync(skillDirectory);
 
     // CREATE FILES FOR SKILL CREATION/UPDATE
-    createAlexaSkill.createSkillFiles(data, skillDirectory, underscoreName);
+    createAlexaSkill.createSkillFiles(data, skillDirectory, underscoreName, finalData);
 
     console.log('authorization code: ', code);
     console.log('access token: ', accessToken);
@@ -124,20 +166,32 @@ exports.create_post = async (req, res) => {
       smallIconLink: `https://s3.amazonaws.com/${bucketName}/assets/images/108/${underscoreName}108.png`,
       largeIconLink: `https://s3.amazonaws.com/${bucketName}/assets/images/512/${underscoreName}512.png`,
     };
+    let graphicData = {
+      skillId: skillData.skillId,
+      intents: finalData.gintents,
+      wires: finalData.gwires,
+      preprocs: finalData.gpreprocs,
+      branches: finalData.gbranches,
+      slots: finalData.slots,
+      intent_infos: finalData.gintent_infos,
+      launchRequestIntent: finalData.launchRequest
+    };
     console.log('final db data: ', dbData);
     let db = await dbHelpers.alexa_skill_to_db(dbData);
     console.log('final db entry: ', db);
 
+    await dbHelpers.graphic_to_db(graphicData);
+
     awsHelpers.addFileToS3(skillDirectory, underscoreName);
 
     res.redirect('/skills/alexa');
-  });
 };
 
 exports.skill_get = async (req, res) => {
   console.log('skill info page');
-  console.log('req: ', req);
-  console.log('req query: ', req.query);
+  console.log('ACE: ', req.url);
+  //console.log('req: ', req);
+  //console.log('req query: ', req.query);
   let skillId = req.query.skillId;
   let skill = await dbHelpers.get_one_alexa_skill(skillId);
   let skillName = skill.name;
@@ -145,7 +199,7 @@ exports.skill_get = async (req, res) => {
   let result = await createAlexaSkill.checkManifestStatus(manifestStatusLink,
                                                           accessToken);
   let status = result.manifest.lastUpdateRequest.status;
-  if (status !== 'SUCCEEDED') res.redirect('/skills/alexa');
+  if (status !== 'SUCCEEDED') return res.redirect('/skills/alexa');
   if (status === 'SUCCEEDED') {
     let updateAttr = {skill_manifest_updated: Date.now()};
     let updatedSkill = await dbHelpers.update_one_alexa_skill(skillId,
@@ -163,7 +217,7 @@ exports.skill_get = async (req, res) => {
 
 exports.skill_build_interaction_model = async (req, res) => {
   console.log('skill build interaction model');
-  console.log('req query: ', req.query);
+  //console.log('req query: ', req.query);
   let skillId = req.query.skillId;
   let skill = await dbHelpers.get_one_alexa_skill(skillId);
   let skillName = skill.name;
@@ -188,7 +242,7 @@ exports.skill_build_interaction_model = async (req, res) => {
                                                     accessToken);
     if (updateResult === 'error') {
       console.log('update interaction model api error...!');
-      res.redirect('/skills/alexa');
+      return res.redirect('/skills/alexa');
     }
     console.log('updated result: ', updateResult.headers);
     let url = updateResult.headers.location;

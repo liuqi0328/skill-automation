@@ -77,6 +77,7 @@ const uploadIconToS3 = async (smallfilepath, largefilepath, underscoreName) => {
 
   if (!bucket) {
     let params = {Bucket: skillBucketName};
+    console.log("ACE ", skillBucketName);
     return new Promise((resolve, reject) => {
       s3.createBucket(params, async function(err, data) {
         if (err) {

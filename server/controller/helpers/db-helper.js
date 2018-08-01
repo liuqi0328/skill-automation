@@ -3,6 +3,41 @@
 // const mongoose = require('mongoose');
 const AlexaSkill = require('../../models/alexa-skill-model');
 
+const Graphic = require('../../models/graphic-model');
+
+exports.graphic_to_db = async (data) => {
+  let options = {skillId: data.skillId};
+  let graph = await getOneGraphic(options);
+  let graphOptions;
+
+  if (!graph) {
+    graphOptions = {
+      skillId: data.skillId,
+      intents: data.gintents,
+      wires: data.gwires,
+      preprocs: data.gpreprocs,
+      branches: data.gbranches,
+      slots: data.slots,
+      intent_infos: data.gintent_infos,
+      launchRequestIntent: data.launchRequestIntent
+    };
+    await Graphic.create(graphOptions);
+  }
+  else {
+    graphOptions = {
+      skillId: data.skillId,
+      intents: data.gintents,
+      wires: data.gwires,
+      preprocs: data.gpreprocs,
+      branches: data.gbranches,
+      slots: data.slots,
+      intent_infos: data.gintent_infos,
+      launchRequestIntent: data.launchRequestIntent
+    };
+    await graph.update(graphOptions).exec();
+  }
+};
+
 exports.alexa_skill_to_db = async (data) => {
   let skillName = data.skillName;
   let skillId = data.skillId;
@@ -69,6 +104,14 @@ exports.update_one_alexa_skill = async (skillId, updateAttr) => {
 
 let getOneAlexaSkill = async (options) => {
   let skill = await AlexaSkill.findOne(options, (err, data) => {
+    console.log('getting data...');
+    return data;
+  });
+  return skill;
+};
+
+let getOneGraphic = async (options) => {
+  let skill = await Graphic.findOne(options, (err, data) => {
     console.log('getting data...');
     return data;
   });

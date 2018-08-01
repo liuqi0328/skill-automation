@@ -9,7 +9,26 @@ const rp = require('request-promise');
 const alexaBaseUrl = 'https://api.amazonalexa.com';
 const vendorId = process.env.VENDOR_ID;
 
-let createSkillFiles = (data, skillDirectory, underscoreName) => {
+//ACE helpers~~
+let findSlotNames = (utt) => {
+  let slotNames = [];
+  for (let i = 0; i < utt.length; i++) {
+    let slotName = '';
+    if (utt[i] == '{') {
+      i++;
+      while (utt[i] != '}') {
+        slotName += utt[i];
+        i++;
+        if (i == utt.length)
+          return 'err';
+      }
+      slotNames.push(slotName);
+    }
+  }
+  return slotNames;
+};
+
+let createSkillFiles = (data, skillDirectory, underscoreName, finalData) => {
   console.log('build started...!');
 
   // // ASK CONFIG
@@ -51,32 +70,73 @@ let createSkillFiles = (data, skillDirectory, underscoreName) => {
     {
       'name': 'AMAZON.HelpIntent',
       'samples': [],
-    },
-    {
-      'name': 'GetStandingIntent',
-      'slots': [],
-      'samples': [
-        'standing',
-        'get standing',
-        'get current standing',
-      ],
-    },
-  ];
-  let inputIntents = data.intents;
-  if (inputIntents) {
-    for (let i = 0; i < inputIntents.length; i++) {
-      intents.push(inputIntents[i]);
     }
+  ];
+
+  let _intents = finalData.intents;
+  for (let i = 0; i < _intents.length; i++) {
+    
+    //common intents
+    if (i != finalData.launchRequest) {
+      let utts = _intents[i].utt;
+      let name = utts[0] + 'Intent';
+      let slots = [];
+      let samples = [];
+      for (let j = 1; j < utts.length; j++) {
+        samples.push(utts[j]);
+        let slotNames = findSlotNames(utts[j]);
+        if (slotNames == "err") {
+          //ACE ERR: should check at front end
+        }
+        if (slotNames.length > 0) {
+          for (let k = 0; k < slotNames.length; k++) {
+            let slot = {"name": "", "type": ""};
+            let index = finalData.slots.find((obj) => {
+              return obj.name == slotNames[k];
+            });
+            slot.name = index.name;
+            slot.type = index.type;
+            slots.push(slot);
+          }
+        }
+      }
+      intents.push({'name': name, 'slots': slots, 'samples': samples});
+    }
+
+    //launch intent: don't need to handle
   }
 
-  // BUILD SLOT TYPES
   let types = [];
-  let inputTypes = data.types;
-  if (inputTypes) {
-    for (let j = 0; j < inputTypes.length; j++) {
-      types.push(inputTypes[j]);
+  let slots = finalData.slots;
+  for (let i = 0; i < slots.length; i++) {
+    let name = slots[i].type;
+    let values = [];
+    let _values = slots[i].values;
+    for (let j = 0; j < _values.length; j++) {
+      values.push({'name': {'value': _values[j]}});
     }
+    types.push({"name": name, "values": values});
   }
+
+
+  console.log(intents);
+  console.log(types);
+
+  // let inputIntents = data.intents;
+  // if (inputIntents) {
+  //   for (let i = 0; i < inputIntents.length; i++) {
+  //     intents.push(inputIntents[i]);
+  //   }
+  // }
+
+  // // BUILD SLOT TYPES
+  // let types = [];
+  // let inputTypes = data.types;
+  // if (inputTypes) {
+  //   for (let j = 0; j < inputTypes.length; j++) {
+  //     types.push(inputTypes[j]);
+  //   }
+  // }
 
   // CREATE INTERACTION MODELS FOR LOCALES
   const skillName = underscoreName.replace(/_/g, ' ');
@@ -97,6 +157,8 @@ let createSkillFiles = (data, skillDirectory, underscoreName) => {
   });
 
   console.log('interaction model saved...!');
+
+  //process.kill(process.pid);
 
   // SKILL JSON
   const keyWord = [skillName];
@@ -268,17 +330,19 @@ let createSkillFiles = (data, skillDirectory, underscoreName) => {
 const Alexa = require('ask-sdk');
 const unhandledMessage = 'I couldn\\'t understand what you said, please say it again.';
 `
-  for (let i = 0; i < intents.length; i++) {
-    let intent = intents[i];
-    if (i < intents.length - 1) {
-      handlerString += `${intent.name}, `;
-    } else {
-      handlerString += `${intent.name}`;
+  for (let i = 0; i < _intents.length; i++) {
+    let intent = _intents[i];
+    let isLaunch = 1;
+    if (i != finalData.launchRequest) {
+      handlerString += `${intent.utt[0]}Handler, `;
+      isLaunch = 0;
     }
 
     // PARSE INTENT INPUT TO INCLUDE SPEECH AND REPROMPT SPEECH
-    sourceCode += createIntentHandler(intent.name, 'speech', 'repromptSpeech');
+    sourceCode += createIntentHandler(intent, isLaunch, underscoreName);
   }
+
+  handlerString += 'launchRequestHandler';
 
   sourceCode +=
 `const SessionEndedHandler = {
@@ -325,15 +389,17 @@ const PersistenceSavingResponseInterceptor = {
 
 const skillBuilder = Alexa.SkillBuilders.standard();
 exports.handler = skillBuilder
-  .addRequestHandlers(${handlerString})
-  .addErrorHandlers()
+  .addRequestHandlers(${handlerString}, SessionEndedHandler)
+  .addErrorHandlers(ErrorHandler)
   .withTableName()
   .withAutoCreateTable(true)
-  .addResponseInterceptors(PersistenceSavingResponseInterceptor)
   .lambda();`;
-
+console.log('===============ACE================');
+console.log(sourceCode);
   fs.writeFileSync(`${skillDirectory}/project/index.js`, sourceCode);
   // fs.createReadStream(shellScriptPath).pipe(fs.createWriteStream(`${skillDirectory}/project/create_package.sh`));
+
+  //process.kill(process.pid);
 
   // NPM BUILD
   if (!fs.existsSync(`${skillDirectory}/project/submission`)) {
@@ -382,7 +448,7 @@ let createSkill = (skillDirectory, accessToken) => {
     method: 'POST',
     uri: alexaBaseUrl + '/v1/skills',
     headers: {
-      Authorization: accessToken,
+      'Authorization': accessToken,
     },
     body: skillManifest,
     json: true,
@@ -418,7 +484,7 @@ let updateSkill = (skillDirectory, skillId, accessToken) => {
     method: 'PUT',
     uri: alexaBaseUrl + `/v1/skills/${skillId}/stages/development/manifest`,
     headers: {
-      Authorization: accessToken,
+      'Authorization': accessToken,
     },
     body: skillManifest,
     json: true,
@@ -447,7 +513,7 @@ let checkExistingSkill = (underscoreName, accessToken) => {
     method: 'GET',
     uri: alexaBaseUrl + `/v1/skills?vendorId=${vendorId}`,
     headers: {
-      Authorization: accessToken,
+      'Authorization': accessToken,
     },
     json: true,
     // resolveWithFullResponse: true,
@@ -478,19 +544,22 @@ let updateInteractionModel = async (interactionModelDirectory, skillId, locale, 
   //   console.log('Incorrect locale...');
   //   return 'locale error';
   // }
-  let interactionModel =
+  let interactionModel = 
     JSON.parse(fs.readFileSync(`${interactionModelDirectory}/${locale}.json`, 'utf8'));
   let updateInteractionModelOptions = {
     method: 'PUT',
     uri: alexaBaseUrl +
       `/v1/skills/${skillId}/stages/development/interactionModel/locales/${locale}`,
     headers: {
-      Authorization: accessToken,
+      'Authorization': accessToken,
     },
-    body: interactionModel,
-    json: true,
+    body: JSON.stringify(interactionModel),
+    //json: true,
     resolveWithFullResponse: true,
   };
+  console.log('url: ', updateInteractionModelOptions.uri);
+  console.log('body: ', updateInteractionModelOptions.body);
+
   return rp(updateInteractionModelOptions)
     .then((result) => {
       console.log('update interaction model api result headers: ', result.headers);
@@ -499,7 +568,7 @@ let updateInteractionModel = async (interactionModelDirectory, skillId, locale, 
     })
     .catch((error) => {
       // console.error(error);
-      console.log('update interaction model error: ', error.message);
+      console.log('update interaction model error: ', error.message, error.stack);
       return 'error';
     });
 };
@@ -522,7 +591,7 @@ let checkManifestStatus = (url, accessToken) => {
     method: 'GET',
     uri: alexaBaseUrl + url,
     headers: {
-      Authorization: accessToken,
+      'Authorization': accessToken,
     },
     json: true,
     // resolveWithFullResponse: true,
@@ -530,6 +599,7 @@ let checkManifestStatus = (url, accessToken) => {
   return rp(checkOptions)
     .then((result) => {
       console.log('manifest status check: ', result);
+      console.log('manifest status check: ', result.manifest.lastUpdateRequest.errors);
       return result;
     })
     .catch((err) => {
@@ -546,28 +616,107 @@ exports.updateInteractionModel = updateInteractionModel;
 exports.create = create;
 exports.checkManifestStatus = checkManifestStatus;
 
-function createIntentHandler(intentName, speech, repromptSpeech) {
-  let handler =
+//handlerInput.attributesManager.getSessionAttributes();
+
+function createIntentHandler(intent, isLaunch, underscoreName) {
+  
+  let handler;
+
+  let branches = '';
+
+  for (let i = 0; i < intent.branches.length; i++) {
+    
+    branches += intent.branches[i];
+    branches += '\n';
+  }
+
+  //console.log(isLaunch);
+
+  if (isLaunch == 1) {
+
+    //console.log("here");
+
+    handler = 
 `
-const ${intentName}Handler = {
-  canHandle(handlerInput) {
-    const request = handlerInput.requestEnvelope.request;
-
-    return request.type === 'IntentRequest'
-        && request.intent.name === '${intentName}';
+const launchRequestHandler = {
+  canHandle (handlerInput) {
+    console.log('ACE checked');
+    return handlerInput.requestEnvelope.request.type === 'LaunchRequest';
   },
-  handle(handlerInput) {
-    console.log('${intentName}Handler');
+  handle (handlerInput) {
 
-    let speech = '${speech}';
-    let repromptSpeech = '${repromptSpeech}';
+    let sessionData = {'stage': ${intent.stage}};
+    handlerInput.attributesManager.setSessionAttributes(sessionData);
+
+    let resp = '';
+    
+    ${intent.preproc}
+
+    ${branches}
 
     return handlerInput.responseBuilder
-      .speak(speech)
-      .reprompt(repromptSpeech)
-      .getResponse();
-  },
+        .speak(resp)
+        .reprompt(resp)
+        .withSimpleCard('${underscoreName}', resp)
+        .getResponse();
+  }
 };
 `;
+  }
+  else {
+
+    //console.log("here1");
+
+    let stagesEq = '';
+
+    let i;
+
+    for (i = 0; i < intent.parentStages.length - 1; i++) {
+
+      stagesEq += `stage == ${intent.parentStages[i]} || `; 
+    }
+
+    stagesEq += `stage == ${intent.parentStages[i]}`;
+
+    if (intent.parentStages.length == 0) 
+      stagesEq = 'true';
+
+    handler = 
+`
+const ${intent.utt[0]}Handler = {
+  canHandle (handlerInput) {
+    
+    let stage = handlerInput.attributesManager.getSessionAttributes().stage;
+
+    if (${stagesEq}) {
+
+      return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+        && handlerInput.requestEnvelope.request.intent.name === '${intent.utt[0]}Intent';
+    }
+    else 
+      return false;
+  },
+  handle (handlerInput) {
+
+    let sessionData = handlerInput.attributesManager.getSessionAttributes();
+    sessionData.stage = ${intent.stage};
+    handlerInput.attributesManager.setSessionAttributes(sessionData);
+
+    let resp = '';
+    
+    ${intent.preproc}
+
+    ${branches}
+
+    return handlerInput.responseBuilder
+        .speak(resp)
+        .reprompt(resp)
+        .withSimpleCard('${underscoreName}', resp)
+        .getResponse();
+  }
+};
+`;
+  }
+
   return handler;
 }
