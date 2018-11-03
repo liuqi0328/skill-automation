@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>blueprint console</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="viewport" content="height=device-height, initial-scale=1.0">
+	<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+	
+	<div id="enter_panel">
+		<div id="slots">
+			slot name:<input type="text" id="slotName">
+			slot type:<input type="text" id="slotType">
+			slot value:<input type="text" id="slotValue">
+			<br>
+			<br>
+			<button id="addSlotValue">add value</button>
+		</div>
+		<br>
+		<br>
+		<br>
+		<div id="intent_panel">
+			<p id="utt_panel">utterances:</p>
+			<p id="preproc_panel">preprocessor:</p>
+			<p id="branches_panel">branches:</p>
+		</div>
+	</div>
+	<div id="input"></div>
+	<div id="main_board">
+		<div id="new_intent">New Intent</div>
+		<div id="delete_intent">Delete Intent/Wire</div>
+		<div id="preproc">Add Preprocessor</div>
+		<div id="delete_preproc">Delete Preprocessor</div>
+		<div id="branch">Add A Branch</div>
+		<div id="delete_branch">Delete Branch</div>
+		<div id="make_launch">Make Launch Request</div>
+		<form id="submit" action="/skills/alexa/graphic/submit" method="POST">
+			<input id="submit_value" type="hidden" name="graphic">
+			<button>Submit</button>
+		</form>
+		<canvas id="canvas"></canvas>
+	</div>
+	<script type="text/javascript" src="/graphic.js"></script>
+</body>
+</html>
+
+
